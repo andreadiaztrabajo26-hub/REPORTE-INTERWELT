@@ -8,9 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f6f9; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
-        .brand-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        /* Paleta de Marca Interwelt */
+        .brand-header { background: linear-gradient(135deg, #0b1c3c 0%, #173663 100%); }
+        .brand-accent { color: #0056b3; }
+        .brand-bg { background-color: #0b1c3c; }
     </style>
 </head>
 <body class="min-h-screen text-slate-800">
@@ -19,17 +22,18 @@
     <header class="brand-header text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
-                <div class="bg-blue-600 p-2 rounded-lg font-bold text-xl tracking-wider">IW</div>
+                <!-- Logotipo e Identidad Visual Interwelt -->
+                <div class="bg-blue-600 text-white font-black px-3 py-2 rounded-lg text-xl tracking-wider shadow">IW</div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight">INTERWELT | Inteligencia de Negocio</h1>
-                    <p class="text-xs text-slate-400">Monitoreo Ejecutivo y Comercial en Tiempo Real</p>
+                    <h1 class="text-lg font-bold tracking-tight">INTERWELT | Inteligencia de Negocio</h1>
+                    <p class="text-xs text-blue-200">Monitoreo Ejecutivo y Comercial en Tiempo Real</p>
                 </div>
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Selector de Mes -->
                 <div class="flex items-center bg-slate-800 rounded-lg px-3 py-1.5 border border-slate-700">
-                    <span class="text-xs text-slate-400 mr-2">Mes:</span>
+                    <span class="text-xs text-slate-300 mr-2">Mes:</span>
                     <select id="mesSelect" class="bg-transparent text-white font-semibold text-sm focus:outline-none cursor-pointer">
                         <option value="7">Julio</option>
                         <option value="8">Agosto</option>
@@ -40,17 +44,29 @@
                     </select>
                 </div>
 
-                <!-- Selector de Estado -->
-                <div class="flex items-center bg-slate-800 rounded-lg px-3 py-1.5 border border-slate-700">
-                    <span class="text-xs text-slate-400 mr-2">Estado:</span>
-                    <select id="estadoSelect" class="bg-transparent text-white font-semibold text-sm focus:outline-none cursor-pointer">
-                        <option value="ALL_VALID" selected>Emitido + Precompra</option>
-                        <option value="EMITIDO">Solo Emitido</option>
-                        <option value="PRECOMPRA">Solo Precompra</option>
-                    </select>
+                <!-- Botón Desplegable de Estados (Selección Múltiple) -->
+                <div class="relative">
+                    <button onclick="toggleFiltroEstados()" id="btnFiltroEstado" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-700 flex items-center gap-2 transition">
+                        <span>Filtrar Estados (<span id="contadorEstados">0</span>)</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <!-- Menú flotante de checkboxes de estados -->
+                    <div id="dropdownEstados" class="hidden absolute right-0 mt-2 w-64 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 p-4 z-50 space-y-2">
+                        <div class="flex justify-between items-center border-b pb-2 mb-2">
+                            <span class="text-xs font-bold uppercase text-slate-500">Seleccionar Estados</span>
+                            <div class="space-x-2 text-xs">
+                                <button onclick="marcarTodosEstados(true)" class="text-blue-600 hover:underline">Todos</button>
+                                <button onclick="marcarTodosEstados(false)" class="text-slate-500 hover:underline">Ninguno</button>
+                            </div>
+                        </div>
+                        <div id="listaCheckboxesEstados" class="max-h-48 overflow-y-auto space-y-1.5 text-sm">
+                            <!-- Se llena dinámicamente con JS -->
+                        </div>
+                        <button onclick="toggleFiltroEstados(); procesarDatos();" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-lg transition">Aplicar Filtros</button>
+                    </div>
                 </div>
 
-                <button onclick="cargarDatosSheet()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2 card-shadow">
+                <button onclick="cargarDatosSheet()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Actualizar
                 </button>
@@ -61,15 +77,15 @@
     <!-- NAVEGACIÓN DE VISTAS -->
     <main class="max-w-7xl mx-auto px-4 py-6">
         <div class="flex border-b border-slate-300 mb-6 gap-6">
-            <button onclick="cambiarVista('ejecutivo')" id="tabEjecutivo" class="pb-3 font-semibold text-blue-600 border-b-2 border-blue-600 transition">📊 Reporte Ejecutivo</button>
-            <button onclick="cambiarVista('comercial')" id="tabComercial" class="pb-3 font-semibold text-slate-500 hover:text-slate-800 transition">📱 Radar Comercial WhatsApp</button>
+            <button onclick="cambiarVista('ejecutivo')" id="tabEjecutivo" class="pb-3 font-semibold text-blue-700 border-b-2 border-blue-700 transition">📊 Reporte Ejecutivo</button>
+            <button onclick="cambiarVista('comercial')" id="tabComercial" class="pb-3 font-semibold text-slate-500 hover:text-slate-800 transition">📱 Radar Comercial (Tablas)</button>
         </div>
 
         <!-- VISTA EJECUTIVA -->
         <section id="vistaEjecutivo" class="space-y-6">
             <!-- Tarjetas Resumen de Cabecera -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl card-shadow border-l-4 border-blue-600">
+                <div class="bg-white p-5 rounded-xl card-shadow border-l-4 border-blue-800">
                     <p class="text-xs font-semibold text-slate-500 uppercase">Venta Neta Real (Mes)</p>
                     <h3 id="cardVentaNeta" class="text-2xl font-bold text-slate-800 mt-1">$0.00</h3>
                     <p id="cardMetaTotal" class="text-xs text-slate-400 mt-1">Meta: $0.00</p>
@@ -129,39 +145,56 @@
             </div>
         </section>
 
-        <!-- VISTA COMERCIAL (WHATSAPP) -->
+        <!-- VISTA RADAR COMERCIAL (EN FORMATO DE TABLAS) -->
         <section id="vistaComercial" class="hidden space-y-6">
-            <div class="bg-white rounded-xl card-shadow p-6 max-w-2xl mx-auto border border-slate-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="font-bold text-slate-800 text-lg">📱 Radar Comercial para WhatsApp</h2>
-                    <button onclick="copiarReporteWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                        📋 Copiar Mensaje
-                    </button>
+            <div class="bg-white rounded-xl card-shadow p-6 space-y-6 border border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
+                    <div>
+                        <h2 class="font-bold text-slate-800 text-lg">📱 Radar Comercial - Resumen Estructurado</h2>
+                        <p class="text-xs text-slate-500">Visualización en tablas formateadas para análisis rápido por canales.</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg text-xs font-semibold">
+                        Mes Analizado: <span id="lblMesComercial">Noviembre</span>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-500 mb-4">Formato optimizado para reportes rápidos a equipos comerciales y directiva.</p>
-                <textarea id="textoWhatsApp" readonly class="w-full h-80 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-lg focus:outline-none resize-none"></textarea>
+
+                <!-- Tabla Resumen Radar -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="tablaRadarComercial">
+                        <thead class="bg-slate-900 text-white text-xs uppercase font-semibold">
+                            <tr>
+                                <th class="p-3">Unidad Comercial</th>
+                                <th class="p-3 text-right">Meta (USD)</th>
+                                <th class="p-3 text-right">Venta Acumulada</th>
+                                <th class="p-3 text-center">Cumplimiento</th>
+                                <th class="p-3 text-center">Estado Alerta</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-sm">
+                            <!-- Inyectado por JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
 
     <script>
-        // CONFIGURACIÓN DE URLS PÚBLICAS DE GOOGLE SHEETS
         const SHEET_ID = "1et-kCxUpQDmbsBF7u0GGy65Ed45I7kG-Cgt2u-epRKY";
         const URL_DATA = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=DATA`;
         const URL_METAS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=METAS`;
 
         let rawData = [];
         let rawMetas = [];
+        let estadosDisponibles = new Set();
         let chartUnidadesInstance = null;
         let chartTendenciaInstance = null;
 
-        // Feriados bancarios Venezuela 2026 (ejemplo base)
         const feriadosVenezuela2026 = ['2026-01-01', '2026-02-16', '2026-02-17', '2026-04-02', '2026-04-03', '2026-04-19', '2026-05-01', '2026-06-24', '2026-07-05', '2026-07-24', '2026-08-15', '2026-10-12', '2026-11-01', '2026-12-25'];
 
         async function init() {
             await cargarDatosSheet();
             document.getElementById('mesSelect').addEventListener('change', procesarDatos);
-            document.getElementById('estadoSelect').addEventListener('change', procesarDatos);
         }
 
         async function cargarDatosSheet() {
@@ -180,6 +213,15 @@
                     return obj;
                 });
 
+                // Extraer estados únicos para el filtro dinámico
+                estadosDisponibles.clear();
+                rawData.forEach(row => {
+                    const est = String(row['Estado'] || row['col_21'] || '').trim().toUpperCase();
+                    if (est && est !== 'NULL') estadosDisponibles.add(est);
+                });
+
+                construirCheckboxesEstados();
+
                 // Cargar METAS
                 const resMetas = await fetch(URL_METAS);
                 const textMetas = await resMetas.text();
@@ -196,9 +238,47 @@
 
                 procesarDatos();
             } catch (e) {
-                console.error("Error cargando Google Sheets:", e);
-                alert("Error al conectar con Google Sheets. Asegúrate de que el archivo esté compartido públicamente como Lector.");
+                console.error("Error conectando con Google Sheets:", e);
+                alert("Error al conectar con la hoja de cálculo. Valida que los permisos estén públicos como Lector.");
             }
+        }
+
+        function construirCheckboxesEstados() {
+            const contenedor = document.getElementById('listaCheckboxesEstados');
+            contenedor.innerHTML = '';
+            
+            // Por defecto marcamos EMITIDO y PRECOMPRA si existen, o todos si prefieres
+            Array.from(estadosDisponibles).sort().forEach(est => {
+                const isChecked = (est === 'EMITIDO' || est === 'PRECOMPRA') ? 'checked' : '';
+                const div = document.createElement('div');
+                div.className = "flex items-center space-x-2";
+                div.innerHTML = `
+                    <input type="checkbox" value="${est}" ${isChecked} class="chk-estado rounded text-blue-600 focus:ring-blue-500 h-4 w-4" onchange="actualizarContadorEstados()">
+                    <label class="text-xs font-medium text-slate-700 cursor-pointer">${est}</label>
+                `;
+                contenedor.appendChild(div);
+            });
+            actualizarContadorEstados();
+        }
+
+        function actualizarContadorEstados() {
+            const checks = document.querySelectorAll('.chk-estado:checked');
+            document.getElementById('contadorEstados').innerText = checks.length;
+        }
+
+        function marcarTodosestado(seleccionar) {
+            // Placeholder si se requiere
+        }
+
+        function marcarTodosEstados(marcar) {
+            document.querySelectorAll('.chk-estado').forEach(chk => chk.checked = marcar);
+            actualizarContadorEstados();
+            procesarDatos();
+        }
+
+        function toggleFiltroEstados() {
+            const dropdown = document.getElementById('dropdownEstados');
+            dropdown.classList.toggle('hidden');
         }
 
         function cambiarVista(vista) {
@@ -208,12 +288,12 @@
             const secCom = document.getElementById('vistaComercial');
 
             if (vista === 'ejecutivo') {
-                btnEjec.className = "pb-3 font-semibold text-blue-600 border-b-2 border-blue-600 transition";
+                btnEjec.className = "pb-3 font-semibold text-blue-700 border-b-2 border-blue-700 transition";
                 btnCom.className = "pb-3 font-semibold text-slate-500 hover:text-slate-800 transition";
                 secEjec.classList.remove('hidden');
                 secCom.classList.add('hidden');
             } else {
-                btnCom.className = "pb-3 font-semibold text-blue-600 border-b-2 border-blue-600 transition";
+                btnCom.className = "pb-3 font-semibold text-blue-700 border-b-2 border-blue-700 transition";
                 btnEjec.className = "pb-3 font-semibold text-slate-500 hover:text-slate-800 transition";
                 secCom.classList.remove('hidden');
                 secEjec.classList.add('hidden');
@@ -229,13 +309,11 @@
             for (let d = 1; d <= diasEnMes; d++) {
                 const fechaStr = `${anio}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const fechaObj = new Date(anio, mes - 1, d);
-                const diaSemana = fechaObj.getDay(); // 0: Dom, 6: Sáb
+                const diaSemana = fechaObj.getDay();
 
                 if (diaSemana !== 0 && diaSemana !== 6 && !feriadosVenezuela2026.includes(fechaStr)) {
                     totalDias++;
-                    if (fechaObj <= hoy) {
-                        transcurridos++;
-                    }
+                    if (fechaObj <= hoy) transcurridos++;
                 }
             }
             return { totalDias, transcurridos: Math.min(transcurridos, totalDias) };
@@ -243,35 +321,41 @@
 
         function procesarDatos() {
             const mesSeleccionado = parseInt(document.getElementById('mesSelect').value);
-            const estadoFiltro = document.getElementById('estadoSelect').value;
             const anio = 2026;
+
+            // Actualizar texto mes comercial
+            const nombresMeses = {7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'};
+            document.getElementById('lblMesComercial').innerText = nombresMeses[mesSeleccionado];
+
+            // Obtener estados seleccionados en el checklist
+            const estadosSeleccionados = Array.from(document.querySelectorAll('.chk-estado:checked')).map(chk => chk.value);
 
             const { totalDias, transcurridos } = calcularDiasHabilesMes(anio, mesSeleccionado);
 
-            // Filtrar registros válidos de la data
+            // Filtrar registros de DATA
             const registrosValidos = rawData.filter(row => {
                 const estado = String(row['Estado'] || row['col_21'] || '').trim().toUpperCase();
-                
-                // Filtro de Estado
-                if (estadoFiltro === 'ALL_VALID') {
-                    if (estado !== 'EMITIDO' && estado !== 'PRECOMPRA') return false;
-                } else {
-                    if (estado !== estadoFiltro) return false;
-                }
+                if (!estadosSeleccionados.includes(estado)) return false;
 
-                // Filtrar por Fecha Emisión del mes seleccionado
                 const fechaEmisionStr = row['Fecha Emisión'] || row['col_17'];
                 if (!fechaEmisionStr) return false;
 
                 const partesFecha = String(fechaEmisionStr).split('/');
                 if (partesFecha.length < 3) return false;
-                const mesEmision = parseInt(partesFecha[0]);
-                const anioEmision = parseInt(partesFecha[2]);
+                
+                let mesEmision, anioEmision;
+                if (parseInt(partesFecha[0]) > 12) {
+                    mesEmision = parseInt(partesFecha[1]);
+                    anioEmision = parseInt(partesFecha[2]);
+                } else {
+                    mesEmision = parseInt(partesFecha[0]);
+                    anioEmision = parseInt(partesFecha[2]);
+                }
 
                 return mesEmision === mesSeleccionado && anioEmision === anio;
             });
 
-            // Agrupar ventas por Unidad (columna UNIDAD o col_69)
+            // Agrupar ventas por Unidad
             let ventasPorUnidad = {};
             let ventaTotalNeta = 0;
 
@@ -284,8 +368,7 @@
                 ventaTotalNeta += ventaNeta;
             });
 
-            // Extraer Metas del mes seleccionado
-            // Mapeo de columnas de metas según la hoja METAS: B: Julio, C: Agosto, D: Septiembre, E: Octubre, F: Noviembre, G: Diciembre
+            // Extraer Metas del mes
             const columnaMetaMap = { 7: 'col_1', 8: 'col_2', 9: 'col_3', 10: 'col_4', 11: 'col_5', 12: 'col_6' };
             const colMetaKey = columnaMetaMap[mesSeleccionado];
 
@@ -301,7 +384,7 @@
                 }
             });
 
-            // Renderizar tarjetas superiores
+            // Indicadores Generales
             const cumplimientoGlobal = metaTotalGlobal > 0 ? (ventaTotalNeta / metaTotalGlobal) * 100 : 0;
             const proyeccionCierre = transcurridos > 0 ? (ventaTotalNeta / transcurridos) * totalDias : 0;
             const cumplimientoProyeccion = metaTotalGlobal > 0 ? (proyeccionCierre / metaTotalGlobal) * 100 : 0;
@@ -314,9 +397,13 @@
             document.getElementById('cardDiasHabiles').innerText = `${transcurridos} / ${totalDias}`;
             document.getElementById('cardDiariaNecesaria').innerText = `$${diariaNecesaria.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-            // Llenar Tabla de Unidades
+            // Llenar Tabla Principal (Ejecutiva)
             const tbody = document.querySelector('#tablaUnidades tbody');
             tbody.innerHTML = '';
+
+            // Llenar Tabla Secundaria (Radar Comercial en formato de tabla)
+            const tbodyComercial = document.querySelector('#tablaRadarComercial tbody');
+            tbodyComercial.innerHTML = '';
 
             let nombresUnidades = Array.from(new Set([...Object.keys(metasPorUnidad), ...Object.keys(ventasPorUnidad)]));
 
@@ -327,7 +414,6 @@
                 const proyUni = transcurridos > 0 ? (real / transcurridos) * totalDias : 0;
                 const cumpProy = meta > 0 ? (proyUni / meta) * 100 : 0;
 
-                // Semáforo inteligente aplicado a Proyección de Cierre
                 let badgeColor = 'bg-emerald-100 text-emerald-800';
                 let semaforoTxt = '🟢 Meta Cumplida';
                 if (uni.includes('AEROPUERTO') || uni.includes('CENTROAMÉRICA')) {
@@ -341,6 +427,7 @@
                     badgeColor = 'bg-amber-100 text-amber-800';
                 }
 
+                // Fila Ejecutiva
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition";
                 tr.innerHTML = `
@@ -352,17 +439,27 @@
                     <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${semaforoTxt}</span></td>
                 `;
                 tbody.appendChild(tr);
+
+                // Fila Radar Comercial (Tablas)
+                const trCom = document.createElement('tr');
+                trCom.className = "hover:bg-slate-50 transition";
+                trCom.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-800">${uni}</td>
+                    <td class="p-3 text-right text-slate-600">$${meta.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-right font-bold text-blue-700">$${real.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="p-3 text-center font-bold">${cump.toFixed(1)}%</td>
+                    <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${semaforoTxt}</span></td>
+                `;
+                tbodyComercial.appendChild(trCom);
             });
 
             actualizarGraficos(nombresUnidades, metasPorUnidad, ventasPorUnidad);
-            actualizarWhatsApp(ventaTotalNeta, metaTotalGlobal, cumplimientoGlobal, cumplimientoProyeccion);
         }
 
         function actualizarGraficos(unidades, metas, ventas) {
             const dataMetas = unidades.map(u => metas[u] || 0);
             const dataVentas = unidades.map(u => ventas[u] || 0);
 
-            // Gráfico de Unidades
             const ctxUni = document.getElementById('graficoUnidades').getContext('2d');
             if (chartUnidadesInstance) chartUnidadesInstance.destroy();
 
@@ -371,14 +468,13 @@
                 data: {
                     labels: unidades,
                     datasets: [
-                        { label: 'Meta', data: dataMetas, backgroundColor: '#cbd5e1', borderRadius: 4 },
-                        { label: 'Venta Real', data: dataVentas, backgroundColor: '#2563eb', borderRadius: 4 }
+                        { label: 'Meta', data: dataMetas, backgroundColor: '#94a3b8', borderRadius: 4 },
+                        { label: 'Venta Real', data: dataVentas, backgroundColor: '#0b1c3c', borderRadius: 4 }
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // Gráfico de Tendencia
             const ctxTend = document.getElementById('graficoTendencia').getContext('2d');
             if (chartTendenciaInstance) chartTendenciaInstance.destroy();
 
@@ -389,31 +485,14 @@
                     datasets: [{
                         label: 'Evolución de Venta Neta',
                         data: [0.25 * ventas, 0.5 * ventas, ventas, 1.3 * ventas],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: '#0056b3',
+                        backgroundColor: 'rgba(0, 86, 179, 0.1)',
                         fill: true,
                         tension: 0.3
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
-        }
-
-        function actualizarWhatsApp(ventaTotal, metaTotal, cump, proyCump) {
-            const txt = `📊 *REPORTE EJECUTIVO COMERCIAL - INTERWELT*\n\n` +
-                        `💰 *Venta Neta Actual:* $${ventaTotal.toLocaleString('en-US', {maximumFractionDigits: 2})}\n` +
-                        `🎯 *Meta del Mes:* $${metaTotal.toLocaleString('en-US', {maximumFractionDigits: 2})}\n` +
-                        `📈 *Cumplimiento Global:* ${cump.toFixed(1)}%\n` +
-                        `🔮 *Proyección de Cierre:* ${proyCump.toFixed(1)}%\n\n` +
-                        `_Generado automáticamente por Inteligencia de Negocio Interwelt._`;
-            document.getElementById('textoWhatsApp').value = txt;
-        }
-
-        function copiarReporteWhatsApp() {
-            const copyText = document.getElementById("textoWhatsApp");
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("¡Reporte copiado al portapapeles listo para enviar por WhatsApp!");
         }
 
         window.onload = init;
