@@ -1,501 +1,2165 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Ejecutivo y Comercial | Interwelt</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
-        /* Paleta de Marca Interwelt */
-        .brand-header { background: linear-gradient(135deg, #0b1c3c 0%, #173663 100%); }
-        .brand-accent { color: #0056b3; }
-        .brand-bg { background-color: #0b1c3c; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interwelt | Inteligencia de Negocios</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- PapaParse para lectura CSV en vivo desde Google Sheets -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js + Plugin Datalabels -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            iw: {
+              blue: '#004A99',
+              blueDark: '#003570',
+              blueLight: '#EBF4FF',
+              blueSoft: '#F4F8FD',
+              orange: '#F58220',
+              orangeBright: '#FF6B00',
+              orangeLight: '#FFF3E8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F1F5F9;
+      color: #0F172A;
+    }
+
+    /* Estilos de tablas ejecutivas */
+    .iw-table th {
+      background: linear-gradient(180deg, #0056B3 0%, #004A99 100%);
+      color: #FFFFFF;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .iw-table tr.unit-row-blue td {
+      background-color: #0056B3;
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .iw-table tr.unit-row-blue td.metric-cell {
+      background-color: #EBF4FF;
+      color: #004A99;
+      font-weight: 700;
+    }
+
+    .iw-table tr.unit-row-orange td.unit-label {
+      background: linear-gradient(90deg, #F58220 0%, #FF9636 100%);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .iw-table tr.unit-row-orange td.metric-cell {
+      background-color: #FFF9F3;
+      font-weight: 700;
+    }
+
+    .iw-table tr.total-row td {
+      background: linear-gradient(180deg, #004A99 0%, #003570 100%);
+      color: #FFFFFF;
+      font-weight: 800;
+    }
+
+    /* Semáforos unificados */
+    .sem-green { color: #16A34A !important; }
+    .sem-orange { color: #EA580C !important; }
+    .sem-red { color: #DC2626 !important; }
+    .sem-neutral { color: #475569 !important; }
+
+    /* En filas totales con fondo azul oscuro, ajustar contraste de semáforo */
+    .total-row .sem-green { color: #4ADE80 !important; }
+    .total-row .sem-orange { color: #FDBA74 !important; }
+    .total-row .sem-red { color: #FCA5A5 !important; }
+
+    /* Barras de progreso integradas estilo reporte */
+    .mini-bar-bg {
+      background-color: #E2E8F0;
+      border-radius: 999px;
+      height: 10px;
+      width: 48px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* Modo captura limpia para WhatsApp */
+    body.capture-mode .no-capture {
+      display: none !important;
+    }
+    body.capture-mode {
+      background-color: #FFFFFF;
+    }
+    body.capture-mode .capture-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    /* Scrollbar limpio */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
 </head>
-<body class="min-h-screen text-slate-800">
+<body class="min-h-screen flex flex-col">
 
-    <!-- HEADER INSTITUCIONAL -->
-    <header class="brand-header text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <!-- Logotipo e Identidad Visual Interwelt -->
-                <div class="bg-blue-600 text-white font-black px-3 py-2 rounded-lg text-xl tracking-wider shadow">IW</div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight">INTERWELT | Inteligencia de Negocio</h1>
-                    <p class="text-xs text-blue-200">Monitoreo Ejecutivo y Comercial en Tiempo Real</p>
-                </div>
+  <!-- BARRA SUPERIOR DE NAVEGACIÓN Y CONEXIÓN EN VIVO -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-capture">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <!-- Marca Interwelt -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-iw-blue text-white font-black text-xl shadow-sm relative overflow-hidden">
+          <span>iw</span>
+          <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-iw-orange"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-extrabold tracking-tight text-iw-blue">inter<span class="text-iw-orange">welt</span></h1>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-iw-blueLight text-iw-blue">BI Analytics</span>
+          </div>
+          <p class="text-xs text-slate-500">Asistencia Mundial al Viajero • Tablero Automatizado</p>
+        </div>
+      </div>
+
+      <!-- Selector de Pestañas (Ejecutivo vs Comercial) -->
+      <nav class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <button id="tab-btn-ejecutivo" onclick="switchTab('ejecutivo')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-iw-blue text-white shadow-sm">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>Reporte Ejecutivo</span>
+        </button>
+        <button id="tab-btn-comercial" onclick="switchTab('comercial')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-iw-blue">
+          <i data-lucide="target" class="w-4 h-4"></i>
+          <span>Radar Comercial (WhatsApp)</span>
+        </button>
+      </nav>
+
+      <!-- Estado de Google Sheets y Botones de Acción -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+          <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="status-text">Conectando a Google Sheets...</span>
+        </div>
+
+        <button onclick="loadAllData(true)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-iw-blue hover:bg-iw-blueDark text-white text-xs font-semibold transition shadow-sm" title="Recargar datos en vivo desde Google Sheets">
+          <i data-lucide="refresh-cw" id="refresh-icon" class="w-3.5 h-3.5"></i>
+          <span>Actualizar Datos</span>
+        </button>
+
+        <!-- Respaldo CSV offline por si se abre sin internet o CORS local -->
+        <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold cursor-pointer transition" title="Cargar archivo CSV local de respaldo">
+          <i data-lucide="upload" class="w-3.5 h-3.5 text-iw-orange"></i>
+          <span>CSV Local</span>
+          <input type="file" id="local-csv-input" accept=".csv" class="hidden" onchange="handleLocalCSV(event)" />
+        </label>
+      </div>
+    </div>
+
+    <!-- BARRA DE FILTROS DE FECHA Y CALENDARIO VENEZUELA -->
+    <div class="bg-iw-blueSoft border-t border-slate-200/80">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-iw-blue">
+            <i data-lucide="calendar" class="w-4 h-4 text-iw-orange"></i>
+            <span>Período de Análisis:</span>
+          </div>
+
+          <!-- Selector rápido de Mes -->
+          <select id="month-selector" onchange="onMonthPresetChange()" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-iw-blue">
+            <option value="">Cargando meses...</option>
+          </select>
+
+          <!-- Fecha Inicio -->
+          <div class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2.5 py-1">
+            <span class="text-[11px] font-medium text-slate-500">Desde:</span>
+            <input type="date" id="date-start" onchange="recalculateAndRender()" class="text-xs font-semibold text-slate-800 focus:outline-none" />
+          </div>
+
+          <!-- Fecha Corte -->
+          <div class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2.5 py-1">
+            <span class="text-[11px] font-medium text-slate-500">Corte al:</span>
+            <input type="date" id="date-end" onchange="recalculateAndRender()" class="text-xs font-semibold text-slate-800 focus:outline-none" />
+          </div>
+
+          <!-- Botón rápido "Hasta Ayer" -->
+          <button onclick="setCutToYesterday()" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-iw-orangeLight text-iw-orange border border-iw-orange/30 text-xs font-bold transition">
+            Corte a Ayer
+          </button>
+        </div>
+
+        <!-- Resumen de Calendario Venezuela + Modo Captura -->
+        <div class="flex items-center gap-3">
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+            <span class="font-bold text-iw-blue">🇻🇪 Calendario VE:</span>
+            <span id="header-biz-days" class="font-semibold">21 días hábiles</span>
+          </div>
+
+          <button onclick="toggleCaptureMode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm">
+            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+            <span>Modo Captura</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Botón flotante para salir de Modo Captura -->
+  <button id="exit-capture-btn" onclick="toggleCaptureMode()" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900/90 hover:bg-slate-900 text-white px-4 py-2.5 rounded-full shadow-xl text-xs font-bold flex items-center gap-2">
+    <i data-lucide="minimize-2" class="w-4 h-4"></i>
+    <span>Salir de Modo Captura</span>
+  </button>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 capture-container">
+
+    <!-- Alerta de Estado / Error (si ocurre) -->
+    <div id="alert-box" class="hidden mb-5 p-4 rounded-xl border text-sm flex items-start gap-3"></div>
+
+    <!-- ===================================================================== -->
+    <!-- PESTAÑA 1: REPORTE EJECUTIVO (ALTA GERENCIA)                          -->
+    <!-- ===================================================================== -->
+    <section id="view-ejecutivo" class="space-y-6">
+
+      <!-- BLOQUE 1: RESUMEN EJECUTIVO SUPERIOR (CINTA + 6 KPIs + COMPARATIVO MES PASADO) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- Encabezado Azul Corporativo -->
+        <div class="bg-gradient-to-r from-iw-blueDark via-iw-blue to-blue-700 px-6 py-4 flex flex-wrap items-center justify-between gap-2 text-white">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="briefcase" class="w-5 h-5 text-iw-orange"></i>
+            <h2 class="text-base sm:text-lg font-extrabold tracking-wide uppercase" id="exec-report-title">
+              REPORTE DE VENTAS • CORTE AL --
+            </h2>
+          </div>
+          <span class="text-xs font-semibold bg-white/15 px-3 py-1 rounded-full">
+            Valores expresados en USD
+          </span>
+        </div>
+
+        <!-- Cinta de Días Hábiles Venezuela -->
+        <div class="bg-iw-blueLight/70 border-b border-blue-100 px-6 py-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2 text-center">
+          <div class="text-xs sm:text-sm font-extrabold text-iw-blue uppercase tracking-wide" id="kpi-days-total">
+            -- DÍAS HÁBILES DEL MES
+          </div>
+          <div class="text-xs sm:text-sm font-extrabold text-iw-blue uppercase tracking-wide sm:border-x sm:border-blue-200" id="kpi-days-elapsed">
+            -- DÍAS HÁBILES TRANSCURRIDOS
+          </div>
+          <div class="text-xs sm:text-sm font-extrabold text-iw-blue uppercase tracking-wide" id="kpi-days-remaining">
+            -- DÍAS HÁBILES FALTANTES
+          </div>
+        </div>
+
+        <!-- 6 Tarjetas Principales -->
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+          <!-- KPI 1: Venta Bruta -->
+          <div class="bg-iw-blueSoft/60 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center justify-between">
+            <span class="text-[11px] font-extrabold text-iw-blue uppercase leading-tight">Venta Bruta Alcanzada<br>Hasta la Fecha</span>
+            <div class="my-2.5 w-10 h-10 rounded-full bg-iw-blue text-white flex items-center justify-center shadow-sm">
+              <i data-lucide="dollar-sign" class="w-5 h-5"></i>
             </div>
-            
-            <div class="flex flex-wrap items-center gap-3">
-                <!-- Selector de Mes -->
-                <div class="flex items-center bg-slate-800 rounded-lg px-3 py-1.5 border border-slate-700">
-                    <span class="text-xs text-slate-300 mr-2">Mes:</span>
-                    <select id="mesSelect" class="bg-transparent text-white font-semibold text-sm focus:outline-none cursor-pointer">
-                        <option value="7">Julio</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11" selected>Noviembre</option>
-                        <option value="12">Diciembre</option>
-                    </select>
-                </div>
+            <div>
+              <span class="block text-[10px] font-bold text-slate-500">USD</span>
+              <span class="text-lg sm:text-xl font-black text-iw-blue" id="kpi-venta-bruta">$0,00</span>
+            </div>
+          </div>
 
-                <!-- Botón Desplegable de Estados (Selección Múltiple) -->
-                <div class="relative">
-                    <button onclick="toggleFiltroEstados()" id="btnFiltroEstado" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium border border-slate-700 flex items-center gap-2 transition">
-                        <span>Filtrar Estados (<span id="contadorEstados">0</span>)</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <!-- Menú flotante de checkboxes de estados -->
-                    <div id="dropdownEstados" class="hidden absolute right-0 mt-2 w-64 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 p-4 z-50 space-y-2">
-                        <div class="flex justify-between items-center border-b pb-2 mb-2">
-                            <span class="text-xs font-bold uppercase text-slate-500">Seleccionar Estados</span>
-                            <div class="space-x-2 text-xs">
-                                <button onclick="marcarTodosEstados(true)" class="text-blue-600 hover:underline">Todos</button>
-                                <button onclick="marcarTodosEstados(false)" class="text-slate-500 hover:underline">Ninguno</button>
-                            </div>
-                        </div>
-                        <div id="listaCheckboxesEstados" class="max-h-48 overflow-y-auto space-y-1.5 text-sm">
-                            <!-- Se llena dinámicamente con JS -->
-                        </div>
-                        <button onclick="toggleFiltroEstados(); procesarDatos();" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-lg transition">Aplicar Filtros</button>
-                    </div>
-                </div>
+          <!-- KPI 2: Meta Mensual -->
+          <div class="bg-iw-blueSoft/60 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center justify-between">
+            <span class="text-[11px] font-extrabold text-iw-blue uppercase leading-tight">Meta<br>Mensual</span>
+            <div class="my-2.5 w-10 h-10 rounded-full bg-iw-blue text-white flex items-center justify-center shadow-sm">
+              <i data-lucide="target" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold text-slate-500">USD</span>
+              <span class="text-lg sm:text-xl font-black text-iw-blue" id="kpi-meta-mensual">$0,00</span>
+            </div>
+          </div>
 
-                <button onclick="cargarDatosSheet()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Actualizar
+          <!-- KPI 3: % Cumplimiento del Mes -->
+          <div class="bg-iw-blueSoft/60 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center justify-between">
+            <span class="text-[11px] font-extrabold text-iw-blue uppercase leading-tight">% Cumplimiento<br>del Mes</span>
+            <div class="my-2.5 w-10 h-10 rounded-full border-2 border-iw-blue text-iw-blue flex items-center justify-center font-black text-sm">
+              %
+            </div>
+            <div>
+              <span class="text-2xl font-black sem-red" id="kpi-cumplimiento-pct">0%</span>
+              <span class="block text-[10px] font-semibold text-iw-blue mt-0.5" id="kpi-deberiamos-pct">
+                (deberíamos llevar 0% de la meta)
+              </span>
+            </div>
+          </div>
+
+          <!-- KPI 4: Deberíamos llevar a la fecha -->
+          <div class="bg-iw-blueSoft/60 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center justify-between">
+            <span class="text-[11px] font-extrabold text-iw-blue uppercase leading-tight">Deberíamos Llevar<br>a la Fecha</span>
+            <div class="my-2.5 w-10 h-10 rounded-full bg-iw-blue/10 text-iw-blue flex items-center justify-center">
+              <i data-lucide="trending-up" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold text-slate-500">USD</span>
+              <span class="text-lg sm:text-xl font-black text-iw-blue" id="kpi-deberiamos-usd">$0,00</span>
+            </div>
+          </div>
+
+          <!-- KPI 5: Déficit o Superávit a la fecha ($) -->
+          <div class="bg-iw-blueSoft/60 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center justify-between">
+            <span class="text-[11px] font-extrabold text-iw-blue uppercase leading-tight" id="kpi-brecha-label">Déficit a la<br>Fecha</span>
+            <div class="my-2.5 w-10 h-10 rounded-full border-2 border-iw-blue text-iw-blue flex items-center justify-center" id="kpi-brecha-icon">
+              <i data-lucide="arrow-down" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="block text-[10px] font-bold text-slate-500">USD</span>
+              <span class="text-lg sm:text-xl font-black sem-red" id="kpi-brecha-usd">$0,00</span>
+            </div>
+          </div>
+
+          <!-- KPI 6: % Déficit o Superávit a la fecha -->
+          <div class="bg-iw-blueSoft/60 border border-blue-100 rounded-xl p-4 flex flex-col items-center text-center justify-between">
+            <span class="text-[11px] font-extrabold text-iw-blue uppercase leading-tight" id="kpi-brecha-pct-label">% Déficit a la<br>Fecha</span>
+            <div class="my-2.5 w-10 h-10 rounded-full border-2 border-iw-blue text-iw-blue flex items-center justify-center font-black text-sm">
+              %
+            </div>
+            <div>
+              <span class="text-2xl font-black sem-red" id="kpi-brecha-pct">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Franja Comparativa vs Mismo Periodo del Mes Anterior -->
+        <div class="bg-iw-blueLight border-t border-blue-200 px-6 py-3 flex flex-wrap items-center justify-center gap-3 text-center">
+          <span id="mom-arrow-icon" class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-iw-orange text-white">
+            <i data-lucide="trending-down" class="w-4 h-4"></i>
+          </span>
+          <p class="text-xs sm:text-sm font-extrabold text-iw-blue uppercase tracking-wide" id="kpi-mom-banner">
+            LLEVAMOS <span class="text-red-600">0%</span> QUE EN EL MISMO PERIODO DEL MES PASADO
+            <span class="mx-2 text-iw-orange">|</span>
+            EQUIVALENTES A <span class="text-red-600">$0,00 USD</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- BLOQUE 2: CUMPLIMIENTO Y PROYECCIONES POR UNIDAD Y SUBUNIDAD -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-iw-blueDark to-iw-blue px-6 py-3.5 flex flex-wrap items-center justify-between gap-2 text-white">
+          <div class="flex items-center gap-2">
+            <i data-lucide="layers" class="w-5 h-5 text-iw-orange"></i>
+            <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide">
+              Cumplimiento y Proyecciones por Unidad y Subunidad
+            </h3>
+          </div>
+          <div class="flex items-center gap-3 text-[11px] font-semibold">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> &lt;80% Proy.</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 80%–99% Proy.</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> &ge;100% Proy.</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+            <thead>
+              <tr>
+                <th class="py-3 px-4 text-left min-w-[210px]">Unidad / Subunidad</th>
+                <th class="py-3 px-3 text-right">Venta bruta<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-right">Meta mes<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-center">% cumplimiento<br><span class="text-[10px] font-normal opacity-80">mes</span></th>
+                <th class="py-3 px-3 text-right">Faltante del mes<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-center min-w-[185px]">Proyección de cierre<br><span class="text-[10px] font-normal opacity-80">(USD) | %</span></th>
+                <th class="py-3 px-3 text-right">Meta a la fecha<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-center min-w-[165px]">Déficit o superávit<br><span class="text-[10px] font-normal opacity-80">a la fecha (USD) | %</span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-exec-cumplimiento" class="divide-y divide-slate-200">
+              <!-- Se llena dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BLOQUE 3: VARIACIÓN VERSUS MISMO PERIODO DEL MES ANTERIOR -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-iw-blueDark to-iw-blue px-6 py-3.5 flex items-center gap-2 text-white">
+          <i data-lucide="git-compare" class="w-5 h-5 text-iw-orange"></i>
+          <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide">
+            Variación Versus Mismo Periodo del Mes Anterior
+          </h3>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+            <thead>
+              <tr>
+                <th class="py-3 px-4 text-left min-w-[210px]">Unidad / Subunidad</th>
+                <th class="py-3 px-4 text-right" id="th-prev-period">Periodo Mes Anterior (USD)</th>
+                <th class="py-3 px-4 text-right" id="th-curr-period">Periodo Actual (USD)</th>
+                <th class="py-3 px-4 text-center">Variación vs mes ant. %</th>
+                <th class="py-3 px-4 text-right">Diferencia USD</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-exec-mom" class="divide-y divide-slate-200">
+              <!-- Se llena dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BLOQUE 4: DISTRIBUCIÓN DE COSTOS Y MARGEN POR UNIDAD -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-iw-blueDark to-iw-blue px-6 py-3.5 flex flex-wrap items-center justify-between gap-2 text-white">
+          <div class="flex items-center gap-2">
+            <i data-lucide="pie-chart" class="w-5 h-5 text-iw-orange"></i>
+            <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide">
+              Distribución de Costos y Margen por Unidad
+            </h3>
+          </div>
+          <span class="text-[11px] opacity-85">Margen Neto = Venta Bruta − Descuentos − Costo Neto QSA − Comisión Total</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+            <thead>
+              <tr>
+                <th class="py-3 px-4 text-left">Unidad</th>
+                <th class="py-3 px-3 text-right">Venta Bruta</th>
+                <th class="py-3 px-3 text-right">Comisión ($)</th>
+                <th class="py-3 px-3 text-center">% Com.</th>
+                <th class="py-3 px-3 text-right">Descuentos ($)</th>
+                <th class="py-3 px-3 text-center">% Desc.</th>
+                <th class="py-3 px-3 text-right">Costo Neto QSA ($)</th>
+                <th class="py-3 px-3 text-center">% QSA</th>
+                <th class="py-3 px-3 text-right">Margen Neto ($)</th>
+                <th class="py-3 px-3 text-center">% Margen Neto</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-exec-margen" class="divide-y divide-slate-200">
+              <!-- Se llena dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BLOQUE 5: GRÁFICO DE VENTA DIARIA GENERAL TOTAL EMPRESA -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-iw-blueDark to-iw-blue px-6 py-3.5 flex flex-wrap items-center justify-between gap-2 text-white">
+          <div class="flex items-center gap-2">
+            <i data-lucide="activity" class="w-5 h-5 text-iw-orange"></i>
+            <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide">
+              Venta Diaria General Total Empresa
+            </h3>
+          </div>
+          <div class="bg-iw-orange text-white px-3.5 py-1 rounded-lg text-xs font-extrabold shadow-sm">
+            Promedio diario ideal: <span id="badge-ideal-daily">$0,00</span>
+          </div>
+        </div>
+
+        <div class="p-5">
+          <div class="relative w-full h-80 sm:h-96">
+            <canvas id="chart-daily-sales"></canvas>
+          </div>
+          <!-- Cinta de días calendario bajo el gráfico (Azul = Hábil, Naranja = Fin de semana / Feriado VE) -->
+          <div id="daily-calendar-strip" class="mt-3 grid grid-flow-col auto-cols-fr gap-1 overflow-x-auto pb-1">
+            <!-- Se llena dinámicamente -->
+          </div>
+          <p class="mt-3 text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <strong class="text-iw-blue">Nota metodológica:</strong> El <em>Promedio diario ideal</em> corresponde a la meta mensual dividida entre los días hábiles totales del mes (referencia fija de ritmo base). Los días marcados en <span class="text-iw-orange font-bold">naranja</span> corresponden a fines de semana o días feriados oficiales en Venezuela.
+          </p>
+        </div>
+      </div>
+
+      <!-- BLOQUE 6: RADAR COMERCIAL — DISTRIBUCIÓN POR EJECUTIVO COMERCIAL Y VENDEDORES -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden" id="exec-radar-ej-container">
+        <div class="bg-gradient-to-r from-iw-blueDark to-iw-blue px-6 py-3.5 flex flex-wrap items-center justify-between gap-2 text-white">
+          <div class="flex items-center gap-2">
+            <i data-lucide="users" class="w-5 h-5 text-iw-orange"></i>
+            <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide">
+              Radar Comercial • Distribución Porcentual de Venta por Ejecutivo Comercial
+            </h3>
+          </div>
+          <span class="text-xs font-semibold bg-white/15 px-3 py-1 rounded-full" id="exec-radar-corte-badge">
+            Corte de venta al --
+          </span>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <!-- Tabla de Ejecutivos y Vendedores desplegables -->
+          <div class="lg:col-span-6 overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+              <thead>
+                <tr>
+                  <th class="py-2.5 px-3 text-left">Ejecutivo comercial / vendedor</th>
+                  <th class="py-2.5 px-3 text-right">Suma de Total Plan</th>
+                  <th class="py-2.5 px-3 text-right">Distribución</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-exec-ej-1" class="divide-y divide-slate-200">
+                <!-- Se llena dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Gráfico de Torta -->
+          <div class="lg:col-span-6 flex flex-col items-center justify-center">
+            <div class="relative w-full max-w-md h-80 sm:h-96">
+              <canvas id="chart-ej-pie-1"></canvas>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-2 text-center">
+              * El gráfico de torta representa el 100% de los Ejecutivos Comerciales. Haz clic en <span class="font-bold text-iw-blue">[+]</span> en la tabla para desplegar el detalle de sus vendedores asignados.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- PESTAÑA 2: REPORTE COMERCIAL (RADAR WHATSAPP)                         -->
+    <!-- ===================================================================== -->
+    <section id="view-comercial" class="hidden space-y-6">
+
+      <!-- CUADRO 1: RADAR COMERCIAL — RESULTADOS DEL MES -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- Cabecera estilo Radar WhatsApp -->
+        <div class="bg-white border-b-2 border-iw-blue px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-full bg-iw-orangeLight border-2 border-iw-orange flex items-center justify-center text-iw-orange">
+              <i data-lucide="target" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-iw-orange tracking-tight leading-none">
+                RADAR COMERCIAL
+              </h2>
+              <p class="text-xs font-extrabold text-iw-orange uppercase tracking-wider mt-1" id="com-subtitle-month">
+                RESULTADOS DEL MES
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm font-extrabold text-iw-blue">
+            <div class="px-3 py-1.5 bg-iw-blueSoft rounded-lg border border-blue-100" id="com-corte-1">
+              Corte de venta al --
+            </div>
+            <div class="px-3 py-1.5 bg-iw-blueSoft rounded-lg border border-blue-100" id="com-elapsed-1">
+              -- días hábiles transcurridos
+            </div>
+            <div class="px-3 py-1.5 bg-iw-blueSoft rounded-lg border border-blue-100" id="com-remaining-1">
+              -- días hábiles faltantes
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+            <thead>
+              <tr>
+                <th class="py-3 px-4 text-left min-w-[210px]">Unidad / subunidad</th>
+                <th class="py-3 px-3 text-right">Meta mes<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-right">Meta al corte<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-right">Venta bruta<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-3 text-center min-w-[165px]">Déficit o superávit al corte<br><span class="text-[10px] font-normal opacity-80">(USD) | %</span></th>
+                <th class="py-3 px-3 text-center min-w-[165px]">Proyección al cierre<br><span class="text-[10px] font-normal opacity-80">(USD) | %</span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-com-resultados" class="divide-y divide-slate-200">
+              <!-- Se llena dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CUADRO 2: RADAR COMERCIAL — OBJETIVO DIARIO -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-white border-b-2 border-iw-blue px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-full bg-iw-orangeLight border-2 border-iw-orange flex items-center justify-center text-iw-orange">
+              <i data-lucide="crosshair" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-iw-orange tracking-tight leading-none">
+                RADAR COMERCIAL
+              </h2>
+              <p class="text-xs font-extrabold text-iw-orange uppercase tracking-wider mt-1">
+                OBJETIVO DIARIO DINÁMICO
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm font-extrabold text-iw-blue">
+            <div class="px-3 py-1.5 bg-iw-blueSoft rounded-lg border border-blue-100" id="com-corte-2">
+              Corte de venta al --
+            </div>
+            <div class="px-3 py-1.5 bg-iw-blueSoft rounded-lg border border-blue-100" id="com-elapsed-2">
+              -- días hábiles transcurridos
+            </div>
+            <div class="px-3 py-1.5 bg-iw-blueSoft rounded-lg border border-blue-100" id="com-remaining-2">
+              -- días hábiles faltantes
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+            <thead>
+              <tr>
+                <th class="py-3 px-4 text-left min-w-[210px]">Unidad / subunidad</th>
+                <th class="py-3 px-4 text-right">Meta diaria requerida<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-4 text-right">Venta diaria actual<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-4 text-right">Déficit o superávit diario<br><span class="text-[10px] font-normal opacity-80">(USD)</span></th>
+                <th class="py-3 px-4 text-center">Déficit o superávit diario<br><span class="text-[10px] font-normal opacity-80">(%)</span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-com-diario" class="divide-y divide-slate-200">
+              <!-- Se llena dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CUADRO 3: RADAR COMERCIAL — DISTRIBUCIÓN POR EJECUTIVO COMERCIAL (SINCRONIZADO) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-iw-blueDark to-iw-blue px-6 py-3.5 flex flex-wrap items-center justify-between gap-2 text-white">
+          <div class="flex items-center gap-2">
+            <i data-lucide="users" class="w-5 h-5 text-iw-orange"></i>
+            <h3 class="text-sm sm:text-base font-extrabold uppercase tracking-wide">
+              Radar Comercial • Distribución Porcentual de Venta por Ejecutivo Comercial
+            </h3>
+          </div>
+          <span class="text-xs font-semibold bg-white/15 px-3 py-1 rounded-full" id="com-radar-corte-badge">
+            Corte de venta al --
+          </span>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-6 overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-xs sm:text-sm iw-table border-collapse">
+              <thead>
+                <tr>
+                  <th class="py-2.5 px-3 text-left">Ejecutivo comercial / vendedor</th>
+                  <th class="py-2.5 px-3 text-right">Suma de Total Plan</th>
+                  <th class="py-2.5 px-3 text-right">Distribución</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-exec-ej-2" class="divide-y divide-slate-200">
+                <!-- Se llena dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lg:col-span-6 flex flex-col items-center justify-center">
+            <div class="relative w-full max-w-md h-80 sm:h-96">
+              <canvas id="chart-ej-pie-2"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- FOOTER CON FIRMA CORPORATIVA -->
+  <footer class="bg-white border-t border-slate-200 mt-10 py-4 px-6 no-capture">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div>
+        <span class="font-bold text-iw-blue">Interwelt</span> — Asistencia Mundial al Viajero • Inteligencia de Negocios
+      </div>
+      <div>
+        Fuente de datos: Google Sheets en vivo • Calendario de Días Hábiles de Venezuela integrado
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================================= -->
+  <!-- LÓGICA DE DATOS, CALENDARIO VENEZUELA, SEMÁFOROS Y GRÁFICOS             -->
+  <!-- ======================================================================= -->
+  <script>
+    // Inicializar iconos Lucide
+    lucide.createIcons();
+
+    // URLs de Google Sheets proporcionadas
+    const SHEET_ID = '1et-kCxUpQDmbsBF7u0GGy65Ed45I7kG-Cgt2u-epRKY';
+    const URL_DATA_CSV = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=DATA`;
+    const URL_METAS_CSV = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=METAS`;
+
+    // Estado global de la aplicación
+    let rawSales = [];      // Registros limpios de DATA (excluyendo anulados/mercadeo)
+    let metasMap = {};      // Mapa de metas: { 'NOVIEMBRE': { 'OFICINA VIRTUAL': 45000, ... } }
+    let dailyChart = null;
+    let pieChart1 = null;
+    let pieChart2 = null;
+    let expandedExecutives = new Set();
+
+    // Paleta de colores rica y contrastada para el gráfico de torta de Ejecutivos
+    const PIE_COLORS = [
+      '#0056B3', '#F58220', '#0D9488', '#6D28D9', '#2563EB',
+      '#EC4899', '#EA580C', '#0891B2', '#65A30D', '#DB2777',
+      '#4F46E5', '#D97706', '#059669', '#7C3AED', '#DC2626', '#475569'
+    ];
+
+    // Jerarquía Oficial de Unidades y Subunidades de Interwelt
+    const HIERARCHY = [
+      {
+        key: 'OFICINA VIRTUAL',
+        label: 'Oficina virtual',
+        hasTarget: true,
+        subunits: []
+      },
+      {
+        key: 'B2C',
+        label: 'B2C',
+        hasTarget: true,
+        subunits: [
+          { key: 'B2C ASESORES', label: 'B2C Asesores', hasTarget: true },
+          { key: 'CANAL E-COMMERCE', label: 'Canal e-commerce', hasTarget: true },
+          { key: 'AEROPUERTO', label: 'Aeropuerto', hasTarget: false }
+        ]
+      },
+      {
+        key: 'CENTRO AMÉRICA',
+        label: 'Centro América',
+        hasTarget: true,
+        subunits: [
+          { key: 'PANAMÁ', label: 'Panamá', hasTarget: true },
+          { key: 'RESTO DE CENTROAMÉRICA', label: 'Resto de Centroamérica', hasTarget: false },
+          { key: 'COSTA RICA', label: 'Costa Rica', hasTarget: true }
+        ]
+      },
+      {
+        key: 'COLOMBIA',
+        label: 'IW Colombia',
+        hasTarget: true,
+        subunits: [
+          { key: 'CALI', label: 'Cali', hasTarget: true },
+          { key: 'MEDELLÍN', label: 'Medellín', hasTarget: true }
+        ]
+      },
+      {
+        key: 'PERÚ',
+        label: 'IW Perú',
+        hasTarget: true,
+        subunits: []
+      },
+      {
+        key: 'VENEZUELA',
+        label: 'IW Venezuela',
+        hasTarget: true,
+        subunits: [
+          { key: 'ASEGURADOR', label: 'Asegurador', hasTarget: true },
+          { key: 'TURÍSTICO', label: 'Turístico', hasTarget: true }
+        ]
+      },
+      {
+        key: 'TAM',
+        label: 'TAM',
+        hasTarget: true,
+        subunits: []
+      }
+    ];
+
+    const MONTH_NAMES_ES = [
+      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ];
+
+    const DAY_NAMES_ES = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+
+    // =========================================================================
+    // MOTOR DE DÍAS HÁBILES DE VENEZUELA (AUTOMÁTICO)
+    // =========================================================================
+    function getVenezuelaHolidays(year) {
+      // Feriados fijos nacionales en Venezuela
+      const fixed = [
+        `${year}-01-01`, // Año Nuevo
+        `${year}-04-19`, // Declaración de la Independencia
+        `${year}-05-01`, // Día del Trabajador
+        `${year}-06-24`, // Batalla de Carabobo
+        `${year}-07-05`, // Firma del Acta de Independencia
+        `${year}-07-24`, // Natalicio del Libertador
+        `${year}-10-12`, // Día de la Resistencia Indígena
+        `${year}-12-24`, // Víspera de Navidad
+        `${year}-12-25`, // Navidad
+        `${year}-12-31`  // Fin de Año
+      ];
+
+      // Feriados móviles (Carnaval: Lunes y Martes; Semana Santa: Jueves y Viernes Santo)
+      const mobileByYear = {
+        2025: ['2025-03-03', '2025-03-04', '2025-04-17', '2025-04-18'],
+        2026: ['2026-02-16', '2026-02-17', '2026-04-02', '2026-04-03'],
+        2027: ['2027-02-08', '2027-02-09', '2027-03-25', '2027-03-26'],
+        2028: ['2028-02-28', '2028-02-29', '2028-04-13', '2028-04-14']
+      };
+
+      const set = new Set([...fixed, ...(mobileByYear[year] || [])]);
+      return set;
+    }
+
+    function isVenezuelaBusinessDay(dateObj) {
+      const day = dateObj.getDay();
+      if (day === 0 || day === 6) return false; // Domingo o Sábado
+      const iso = toISODate(dateObj);
+      const holidays = getVenezuelaHolidays(dateObj.getFullYear());
+      return !holidays.has(iso);
+    }
+
+    function countBusinessDaysInRange(startDate, endDate) {
+      let count = 0;
+      const cur = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      while (cur <= end) {
+        if (isVenezuelaBusinessDay(cur)) count++;
+        cur.setDate(cur.getDate() + 1);
+      }
+      return count;
+    }
+
+    function getMonthBusinessStats(year, monthIndex, cutDate) {
+      const firstDay = new Date(year, monthIndex, 1);
+      const lastDay = new Date(year, monthIndex + 1, 0);
+      const totalBizDays = countBusinessDaysInRange(firstDay, lastDay);
+
+      // Si el corte está dentro del mes seleccionado
+      let effectiveCut = cutDate;
+      if (cutDate < firstDay) effectiveCut = firstDay;
+      if (cutDate > lastDay) effectiveCut = lastDay;
+
+      const elapsedBizDays = countBusinessDaysInRange(firstDay, effectiveCut);
+      const remainingBizDays = Math.max(0, totalBizDays - elapsedBizDays);
+
+      return { totalBizDays, elapsedBizDays, remainingBizDays };
+    }
+
+    // =========================================================================
+    // UTILIDADES DE PARSEO Y FORMATEO
+    // =========================================================================
+    function toISODate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function parseLocalISODate(str) {
+      if (!str) return null;
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function parseNumber(val) {
+      if (val === null || val === undefined || val === '') return 0;
+      if (typeof val === 'number') return val;
+      let s = String(val).trim().replace(/\$/g, '').replace(/\s/g, '');
+      if (!s || s === '-') return 0;
+      // Detectar si usa coma decimal (ej. 1.234,56) o punto decimal (ej. 1,234.56)
+      const lastComma = s.lastIndexOf(',');
+      const lastDot = s.lastIndexOf('.');
+      if (lastComma > lastDot) {
+        s = s.replace(/\./g, '').replace(',', '.');
+      } else {
+        s = s.replace(/,/g, '');
+      }
+      const num = parseFloat(s);
+      return isNaN(num) ? 0 : num;
+    }
+
+    // Parseo inteligente de fecha de emisión (M/D/YYYY o D/M/YYYY)
+    function parseFlexibleDate(rawStr, preferMDY = true) {
+      if (!rawStr) return null;
+      const clean = String(rawStr).trim().split(' ')[0];
+      if (clean.includes('-')) {
+        const parts = clean.split('-').map(Number);
+        if (parts[0] > 1000) return new Date(parts[0], parts[1] - 1, parts[2]);
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+      }
+      if (clean.includes('/')) {
+        const parts = clean.split('/').map(Number);
+        if (parts.length !== 3) return null;
+        let [p1, p2, y] = parts;
+        if (y < 100) y += 2000;
+        if (p1 > 12) return new Date(y, p2 - 1, p1); // Claramente D/M/YYYY
+        if (p2 > 12) return new Date(y, p1 - 1, p2); // Claramente M/D/YYYY
+        return preferMDY ? new Date(y, p1 - 1, p2) : new Date(y, p2 - 1, p1);
+      }
+      return null;
+    }
+
+    function formatUSD(val, showSign = false) {
+      const isNeg = val < -0.004;
+      const absVal = Math.abs(val);
+      const formatted = absVal.toLocaleString('es-VE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      if (isNeg) return `-$${formatted}`;
+      if (showSign && val > 0.004) return `+$${formatted}`;
+      return `$${formatted}`;
+    }
+
+    function formatPct(val, decimals = 0, showSign = false) {
+      const pct = val * 100;
+      const isNeg = pct < -0.05;
+      const absPct = Math.abs(pct).toLocaleString('es-VE', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+      if (isNeg) return `-${absPct}%`;
+      if (showSign && pct > 0.05) return `+${absPct}%`;
+      return `${absPct}%`;
+    }
+
+    // =========================================================================
+    // NORMALIZACIÓN DE UNIDADES Y SUBUNIDADES
+    // =========================================================================
+    function normalizeUnitName(rawUnit) {
+      const u = String(rawUnit || '').trim().toUpperCase();
+      if (!u) return 'OTROS';
+      if (u.includes('OFICINA') || u.includes('VIRTUAL B2B')) return 'OFICINA VIRTUAL';
+      if (u.includes('B2C')) return 'B2C';
+      if (u.includes('CENTRO') && u.includes('AM')) return 'CENTRO AMÉRICA';
+      if (u.includes('COLOMBIA')) return 'COLOMBIA';
+      if (u.includes('PERU') || u.includes('PERÚ')) return 'PERÚ';
+      if (u.includes('VENEZUELA')) return 'VENEZUELA';
+      if (u.includes('TAM')) return 'TAM';
+      return u;
+    }
+
+    function normalizeSubunitName(rawSub, normUnit) {
+      const s = String(rawSub || '').trim().toUpperCase();
+      if (!s) return '';
+      if (s.includes('ASESOR')) return 'B2C ASESORES';
+      if (s.includes('COMMERCE') || s === 'WEB') return 'CANAL E-COMMERCE';
+      if (s.includes('AEROPUERTO')) return 'AEROPUERTO';
+      if (s.includes('PANAM')) return 'PANAMÁ';
+      if (s.includes('RESTO')) return 'RESTO DE CENTROAMÉRICA';
+      if (s.includes('COSTA RICA')) return 'COSTA RICA';
+      if (s.includes('CALI')) return 'CALI';
+      if (s.includes('MEDELL')) return 'MEDELLÍN';
+      if (s.includes('ASEGURADOR')) return 'ASEGURADOR';
+      if (s.includes('TURIS') || s.includes('TURÍS')) return 'TURÍSTICO';
+      return s;
+    }
+
+    function normalizeMetaKey(rawLabel) {
+      const t = String(rawLabel || '').trim().toUpperCase();
+      if (t === 'VIRTUAL B2B' || t.includes('OFICINA VIRTUAL')) return 'OFICINA VIRTUAL';
+      if (t === 'VIRTUAL B2C' || t === 'B2C') return 'B2C';
+      if (t === 'ASESORES' || t.includes('B2C ASESORES')) return 'B2C ASESORES';
+      if (t === 'WEB' || t.includes('COMMERCE')) return 'CANAL E-COMMERCE';
+      if (t.includes('AEROPUERTO')) return 'AEROPUERTO';
+      if (t.includes('CENTROAM') || t.includes('CENTRO AM')) {
+        if (t.includes('RESTO')) return 'RESTO DE CENTROAMÉRICA';
+        return 'CENTRO AMÉRICA';
+      }
+      if (t.includes('PANAM')) return 'PANAMÁ';
+      if (t.includes('COSTA RICA')) return 'COSTA RICA';
+      if (t.includes('COLOMBIA')) return 'COLOMBIA';
+      if (t === 'CALI') return 'CALI';
+      if (t.includes('MEDELL')) return 'MEDELLÍN';
+      if (t.includes('PERU') || t.includes('PERÚ')) return 'PERÚ';
+      if (t.includes('VENEZUELA')) return 'VENEZUELA';
+      if (t.includes('ASEGURADOR')) return 'ASEGURADOR';
+      if (t.includes('TURIS') || t.includes('TURÍS')) return 'TURÍSTICO';
+      if (t === 'TAM') return 'TAM';
+      return t;
+    }
+
+    // =========================================================================
+    // CARGA DE DATOS DESDE GOOGLE SHEETS (O CSV LOCAL)
+    // =========================================================================
+    function setConnectionStatus(state, text) {
+      const dot = document.getElementById('status-dot');
+      const label = document.getElementById('status-text');
+      label.textContent = text;
+      dot.className = 'w-2.5 h-2.5 rounded-full ';
+      if (state === 'loading') dot.className += 'bg-amber-400 animate-pulse';
+      else if (state === 'ok') dot.className += 'bg-emerald-500';
+      else dot.className += 'bg-red-500';
+    }
+
+    function showAlert(type, message) {
+      const box = document.getElementById('alert-box');
+      box.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-amber-50', 'border-amber-200', 'text-amber-800');
+      if (type === 'error') {
+        box.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+      } else {
+        box.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-800');
+      }
+      box.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i><div>${message}</div>`;
+      lucide.createIcons();
+    }
+
+    function hideAlert() {
+      document.getElementById('alert-box').classList.add('hidden');
+    }
+
+    async function fetchCSV(url) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(url, {
+          download: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data),
+          error: (err) => reject(err)
+        });
+      });
+    }
+
+    async function loadAllData(forceRefresh = false) {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('animate-spin');
+      setConnectionStatus('loading', 'Sincronizando con Google Sheets...');
+      hideAlert();
+
+      try {
+        const cacheBuster = forceRefresh ? `&t=${Date.now()}` : '';
+        const [dataRows, metasRows] = await Promise.all([
+          fetchCSV(URL_DATA_CSV + cacheBuster),
+          fetchCSV(URL_METAS_CSV + cacheBuster)
+        ]);
+
+        parseMetasSheet(metasRows);
+        parseDataSheet(dataRows);
+
+        const nowStr = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+        setConnectionStatus('ok', `Conectado en vivo • ${rawSales.length.toLocaleString('es-VE')} ventas válidas (${nowStr})`);
+        initDateControls();
+        recalculateAndRender();
+      } catch (err) {
+        console.error('Error cargando Google Sheets:', err);
+        setConnectionStatus('error', 'Sin conexión directa a Google Sheets');
+        showAlert('error', `
+          <strong>No se pudo leer automáticamente el Google Sheet.</strong> Esto suele ocurrir si la hoja aún no está compartida como "Cualquier persona con el enlace puede leer" o si abriste el archivo sin conexión a internet.<br>
+          <span class="text-xs mt-1 block">Puedes verificar los permisos de compartir en Google Drive o usar el botón <strong>"CSV Local"</strong> arriba a la derecha para cargar tu archivo directamente.</span>
+        `);
+      } finally {
+        icon.classList.remove('animate-spin');
+      }
+    }
+
+    function handleLocalCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      setConnectionStatus('loading', `Leyendo ${file.name}...`);
+      Papa.parse(file, {
+        skipEmptyLines: true,
+        complete: (results) => {
+          hideAlert();
+          // Cargar metas por defecto de Noviembre 2026 como respaldo si no hay conexión a METAS
+          if (Object.keys(metasMap).length === 0) {
+            loadFallbackMetas();
+          }
+          parseDataSheet(results.data);
+          setConnectionStatus('ok', `Archivo local cargado • ${rawSales.length.toLocaleString('es-VE')} ventas válidas`);
+          initDateControls();
+          recalculateAndRender();
+        }
+      });
+    }
+
+    function loadFallbackMetas() {
+      metasMap['NOVIEMBRE'] = {
+        'OFICINA VIRTUAL': 45000,
+        'B2C': 29000,
+        'B2C ASESORES': 23000,
+        'CANAL E-COMMERCE': 6000,
+        'CENTRO AMÉRICA': 39000,
+        'PANAMÁ': 6000,
+        'COSTA RICA': 33000,
+        'COLOMBIA': 46000,
+        'CALI': 32000,
+        'MEDELLÍN': 14000,
+        'PERÚ': 22000,
+        'VENEZUELA': 171200,
+        'ASEGURADOR': 46200,
+        'TURÍSTICO': 125000,
+        'TAM': 4900
+      };
+    }
+
+    // Parseo dinámico de la hoja METAS
+    function parseMetasSheet(rows) {
+      metasMap = {};
+      if (!rows || rows.length < 2) return;
+
+      // Buscar fila de encabezados que contenga nombres de meses
+      let headerRowIdx = 0;
+      for (let i = 0; i < Math.min(10, rows.length); i++) {
+        const joined = rows[i].join(' ').toUpperCase();
+        if (joined.includes('NOVIEMBRE') || joined.includes('OCTUBRE') || joined.includes('JULIO')) {
+          headerRowIdx = i;
+          break;
+        }
+      }
+
+      const headers = rows[headerRowIdx].map(h => String(h || '').trim().toUpperCase());
+      const monthCols = {};
+      headers.forEach((h, idx) => {
+        if (MONTH_NAMES_ES.includes(h)) {
+          monthCols[h] = idx;
+          metasMap[h] = {};
+        }
+      });
+
+      for (let r = headerRowIdx + 1; r < rows.length; r++) {
+        const row = rows[r];
+        // La etiqueta de unidad/subunidad puede estar en col 0 o col 1
+        const rawName = (row[1] && String(row[1]).trim()) ? row[1] : row[0];
+        if (!rawName) continue;
+        const normKey = normalizeMetaKey(rawName);
+        if (normKey.includes('TOTAL')) continue;
+
+        Object.entries(monthCols).forEach(([monthName, colIdx]) => {
+          const val = parseNumber(row[colIdx]);
+          if (val > 0 || !(normKey in metasMap[monthName])) {
+            metasMap[monthName][normKey] = val;
+          }
+        });
+      }
+    }
+
+    // Parseo de la hoja DATA (77 columnas)
+    function parseDataSheet(rows) {
+      rawSales = [];
+      if (!rows || rows.length < 2) return;
+
+      const headers = rows[0].map(h => String(h || '').trim().toLowerCase());
+
+      // Detectar índices dinámicamente con respaldo de las posiciones fijas exactas
+      const findCol = (keywords, fallbackIdx) => {
+        const idx = headers.findIndex(h => keywords.some(k => h === k || h.includes(k)));
+        return idx !== -1 ? idx : fallbackIdx;
+      };
+
+      const idxPlanTotal = findCol(['total plan'], 7);        // Col H
+      const idxFecha = findCol(['fecha emisión', 'fecha emision'], 17); // Col R
+      const idxEstado = findCol(['estado'], 21);               // Col V
+      const idxDescuento = findCol(['descuento'], 22);         // Col W
+      const idxVendedor = findCol(['vendedor'], 50);           // Col AY
+      const idxEjecutivo1 = findCol(['ejecutivo comercial'], 51); // Col AZ
+      const idxCostoNetoQSA = findCol(['costo neto qsa'], 56); // Col BE
+      const idxComisionTotal = findCol(['comision usd total', 'comisión usd total'], 59); // Col BH
+      const idxSubunidad = findCol(['subunidad'], 67);         // Col BP
+      const idxUnidad = findCol(['unidad'], 68);               // Col BQ
+      const idxEjecutivo2 = headers.findIndex((h, i) => i > 60 && h.includes('ejecutivo comercial'));
+      const finalIdxEjec2 = idxEjecutivo2 !== -1 ? idxEjecutivo2 : 75; // Col BX
+
+      // Detectar si las fechas vienen en formato M/D/YYYY (mes primero) o D/M/YYYY
+      let mdyVotes = 0, dmyVotes = 0;
+      for (let i = 1; i < Math.min(200, rows.length); i++) {
+        const f = String(rows[i][idxFecha] || '').trim();
+        if (f.includes('/')) {
+          const [p1, p2] = f.split('/').map(Number);
+          if (p2 > 12) mdyVotes++;
+          if (p1 > 12) dmyVotes++;
+        }
+      }
+      const preferMDY = mdyVotes >= dmyVotes;
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length < 18) continue;
+
+        // Regla obligatoria: Excluir ANULADO y MERCADEO
+        const estado = String(row[idxEstado] || '').trim().toUpperCase();
+        if (!estado || estado.includes('ANULAD') || estado.includes('MERCADEO')) {
+          continue;
+        }
+
+        const dateObj = parseFlexibleDate(row[idxFecha], preferMDY);
+        if (!dateObj || isNaN(dateObj.getTime())) continue;
+
+        const ventaBruta = parseNumber(row[idxPlanTotal]);
+        const descuento = parseNumber(row[idxDescuento]);
+        const costoQSA = parseNumber(row[idxCostoNetoQSA]);
+        const comision = parseNumber(row[idxComisionTotal]);
+
+        const unit = normalizeUnitName(row[idxUnidad]);
+        const subunit = normalizeSubunitName(row[idxSubunidad], unit);
+
+        const execRaw = (row[finalIdxEjec2] && String(row[finalIdxEjec2]).trim())
+          ? String(row[finalIdxEjec2]).trim()
+          : String(row[idxEjecutivo1] || 'Sin Asignar').trim();
+        const vendedorRaw = String(row[idxVendedor] || '').trim();
+
+        rawSales.push({
+          date: dateObj,
+          isoDate: toISODate(dateObj),
+          year: dateObj.getFullYear(),
+          month: dateObj.getMonth(), // 0-11
+          day: dateObj.getDate(),
+          ventaBruta,
+          descuento,
+          costoQSA,
+          comision,
+          unit,
+          subunit,
+          executive: execRaw || 'Sin Asignar',
+          vendedor: vendedorRaw
+        });
+      }
+    }
+
+    // =========================================================================
+    // CONTROLES DE FECHA E INICIALIZACIÓN DE PERÍODO
+    // =========================================================================
+    function initDateControls() {
+      if (rawSales.length === 0) return;
+
+      // Encontrar la fecha máxima disponible en los datos y los meses disponibles
+      let maxDate = rawSales[0].date;
+      const monthsSet = new Set();
+
+      rawSales.forEach(s => {
+        if (s.date > maxDate) maxDate = s.date;
+        monthsSet.add(`${s.year}-${String(s.month + 1).padStart(2, '0')}`);
+      });
+
+      const sortedMonths = Array.from(monthsSet).sort().reverse();
+      const selector = document.getElementById('month-selector');
+      selector.innerHTML = sortedMonths.map(ym => {
+        const [y, m] = ym.split('-').map(Number);
+        return `<option value="${ym}">${MONTH_NAMES_ES[m - 1]} ${y}</option>`;
+      }).join('');
+
+      // Por defecto: desde el día 1 del último mes disponible hasta la fecha máxima disponible
+      const startDefault = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+      document.getElementById('date-start').value = toISODate(startDefault);
+      document.getElementById('date-end').value = toISODate(maxDate);
+      selector.value = `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function onMonthPresetChange() {
+      const val = document.getElementById('month-selector').value;
+      if (!val) return;
+      const [y, m] = val.split('-').map(Number);
+      const firstDay = new Date(y, m - 1, 1);
+
+      // Buscar la última fecha con ventas dentro de ese mes, o el último día del mes
+      let maxInMonth = null;
+      rawSales.forEach(s => {
+        if (s.year === y && s.month === (m - 1)) {
+          if (!maxInMonth || s.date > maxInMonth) maxInMonth = s.date;
+        }
+      });
+      if (!maxInMonth) maxInMonth = new Date(y, m, 0);
+
+      document.getElementById('date-start').value = toISODate(firstDay);
+      document.getElementById('date-end').value = toISODate(maxInMonth);
+      recalculateAndRender();
+    }
+
+    function setCutToYesterday() {
+      const endInput = document.getElementById('date-end');
+      const currentCut = parseLocalISODate(endInput.value) || new Date();
+      currentCut.setDate(currentCut.getDate() - 1);
+      endInput.value = toISODate(currentCut);
+      recalculateAndRender();
+    }
+
+    // =========================================================================
+    // MOTOR DE CÁLCULO Y RENDERIZADO GENERAL
+    // =========================================================================
+    function getSemaphoreClass(projPct, hasTarget = true) {
+      if (!hasTarget || projPct === null || isNaN(projPct)) return 'sem-neutral';
+      if (projPct >= 1.0) return 'sem-green';
+      if (projPct >= 0.80) return 'sem-orange';
+      return 'sem-red';
+    }
+
+    function getSemaphoreBarColor(projPct, hasTarget = true) {
+      if (!hasTarget || projPct === null || isNaN(projPct)) return '#94A3B8';
+      if (projPct >= 1.0) return '#16A34A';
+      if (projPct >= 0.80) return '#F59E0B';
+      return '#DC2626';
+    }
+
+    function recalculateAndRender() {
+      const startDate = parseLocalISODate(document.getElementById('date-start').value);
+      const endDate = parseLocalISODate(document.getElementById('date-end').value);
+      if (!startDate || !endDate) return;
+
+      const year = endDate.getFullYear();
+      const monthIdx = endDate.getMonth();
+      const monthName = MONTH_NAMES_ES[monthIdx];
+
+      // Sincronizar selector de mes
+      const ymStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}`;
+      const selector = document.getElementById('month-selector');
+      if (Array.from(selector.options).some(o => o.value === ymStr)) {
+        selector.value = ymStr;
+      }
+
+      // 1. Calcular Días Hábiles de Venezuela
+      const bizStats = getMonthBusinessStats(year, monthIdx, endDate);
+      const { totalBizDays, elapsedBizDays, remainingBizDays } = bizStats;
+      const expectedRatio = totalBizDays > 0 ? (elapsedBizDays / totalBizDays) : 0;
+
+      // 2. Calcular Período Equivalente del Mes Anterior (ej. 1 al 8 de Oct si es 1 al 8 de Nov)
+      const prevYear = monthIdx === 0 ? year - 1 : year;
+      const prevMonthIdx = monthIdx === 0 ? 11 : monthIdx - 1;
+      const prevMonthLastDay = new Date(prevYear, prevMonthIdx + 1, 0).getDate();
+      const prevStart = new Date(prevYear, prevMonthIdx, Math.min(startDate.getDate(), prevMonthLastDay));
+      const prevEnd = new Date(prevYear, prevMonthIdx, Math.min(endDate.getDate(), prevMonthLastDay));
+
+      // 3. Filtrar ventas del período actual y del período anterior
+      const currentSales = rawSales.filter(s => s.date >= startDate && s.date <= endDate);
+      const prevSales = rawSales.filter(s => s.date >= prevStart && s.date <= prevEnd);
+
+      // 4. Obtener Metas del Mes
+      const monthMetas = metasMap[monthName] || {};
+
+      // Textos de encabezado de fechas
+      const cutDay = endDate.getDate();
+      const monthLower = monthName.toLowerCase();
+      const corteTexto = `Corte al ${cutDay} de ${monthLower} ${year}`;
+      const corteCorto = `Corte de venta al ${cutDay} de ${monthLower}`;
+
+      document.getElementById('header-biz-days').textContent = `${totalBizDays} días hábiles (${elapsedBizDays} transcurridos)`;
+      document.getElementById('exec-report-title').textContent = `REPORTE DE VENTAS • ${corteTexto.toUpperCase()}`;
+      document.getElementById('kpi-days-total').textContent = `${totalBizDays} DÍAS HÁBILES DEL MES`;
+      document.getElementById('kpi-days-elapsed').textContent = `${elapsedBizDays} DÍAS HÁBILES TRANSCURRIDOS`;
+      document.getElementById('kpi-days-remaining').textContent = `${remainingBizDays} DÍAS HÁBILES FALTANTES`;
+
+      document.getElementById('com-subtitle-month').textContent = `RESULTADOS DE ${monthName}`;
+      document.getElementById('com-corte-1').textContent = corteCorto;
+      document.getElementById('com-elapsed-1').textContent = `${elapsedBizDays} días hábiles transcurridos`;
+      document.getElementById('com-remaining-1').textContent = `${remainingBizDays} días hábiles faltantes`;
+      document.getElementById('com-corte-2').textContent = corteCorto;
+      document.getElementById('com-elapsed-2').textContent = `${elapsedBizDays} días hábiles transcurridos`;
+      document.getElementById('com-remaining-2').textContent = `${remainingBizDays} días hábiles faltantes`;
+      document.getElementById('exec-radar-corte-badge').textContent = corteCorto;
+      document.getElementById('com-radar-corte-badge').textContent = corteCorto;
+
+      document.getElementById('th-prev-period').textContent = `Hasta el ${prevEnd.getDate()} de ${MONTH_NAMES_ES[prevMonthIdx]} (USD)`;
+      document.getElementById('th-curr-period').textContent = `Hasta el ${cutDay} de ${monthName} (USD)`;
+
+      // 5. Consolidar métricas por Unidad y Subunidad
+      const summaryRows = buildHierarchyMetrics(currentSales, prevSales, monthMetas, bizStats);
+
+      // 6. Renderizar KPIs Superiores (Bloque 1 Ejecutivo)
+      renderTopKPIs(summaryRows.total, bizStats);
+
+      // 7. Renderizar Tablas Ejecutivas (Bloques 2, 3 y 4)
+      renderExecCumplimientoTable(summaryRows);
+      renderExecMoMTable(summaryRows);
+      renderExecMarginTable(summaryRows);
+
+      // 8. Renderizar Tablas Comerciales (Radar WhatsApp: Resultados y Objetivo Diario)
+      renderComResultadosTable(summaryRows);
+      renderComDiarioTable(summaryRows, bizStats);
+
+      // 9. Renderizar Gráfico Diario (Bloque 5)
+      renderDailySalesChart(year, monthIdx, endDate, summaryRows.total.metaMes, totalBizDays);
+
+      // 10. Renderizar Radar de Ejecutivos Comerciales y Torta (Bloque 6)
+      renderExecutivesRadar(currentSales);
+    }
+
+    function buildHierarchyMetrics(currentSales, prevSales, monthMetas, bizStats) {
+      const { totalBizDays, elapsedBizDays, remainingBizDays } = bizStats;
+      const expectedRatio = totalBizDays > 0 ? (elapsedBizDays / totalBizDays) : 0;
+
+      const calcRowStats = (salesArr, prevArr, metaMes, hasTarget) => {
+        const ventaBruta = salesArr.reduce((acc, s) => acc + s.ventaBruta, 0);
+        const prevVenta = prevArr.reduce((acc, s) => acc + s.ventaBruta, 0);
+        const comision = salesArr.reduce((acc, s) => acc + s.comision, 0);
+        const descuento = salesArr.reduce((acc, s) => acc + s.descuento, 0);
+        const costoQSA = salesArr.reduce((acc, s) => acc + s.costoQSA, 0);
+        const margenNeto = ventaBruta - descuento - costoQSA - comision;
+
+        const effectiveHasTarget = hasTarget && metaMes > 0;
+        const cumplimientoPct = effectiveHasTarget ? (ventaBruta / metaMes) : null;
+        const faltanteMes = effectiveHasTarget ? (ventaBruta - metaMes) : null; // Negativo si falta
+        const dailyAvgActual = elapsedBizDays > 0 ? (ventaBruta / elapsedBizDays) : 0;
+        const projCierreUSD = dailyAvgActual * totalBizDays;
+        const projCierrePct = effectiveHasTarget ? (projCierreUSD / metaMes) : null;
+
+        const metaAlCorte = effectiveHasTarget ? (metaMes * expectedRatio) : null;
+        const brechaCorteUSD = effectiveHasTarget ? (ventaBruta - metaAlCorte) : null;
+        const brechaCortePct = effectiveHasTarget ? (brechaCorteUSD / metaMes) : null;
+        const brechaRelativaPct = (effectiveHasTarget && metaAlCorte > 0) ? (brechaCorteUSD / metaAlCorte) : null;
+
+        // Objetivo diario dinámico
+        const metaDiariaReq = (effectiveHasTarget && remainingBizDays > 0)
+          ? Math.max(0, (metaMes - ventaBruta) / remainingBizDays)
+          : null;
+        const brechaDiariaUSD = metaDiariaReq !== null ? (dailyAvgActual - metaDiariaReq) : null;
+        const brechaDiariaPct = (metaDiariaReq !== null && metaDiariaReq > 0)
+          ? (brechaDiariaUSD / metaDiariaReq)
+          : null;
+
+        // Variación vs Mes Anterior
+        const diffMoMUSD = ventaBruta - prevVenta;
+        const varMoMPct = prevVenta > 0 ? (diffMoMUSD / prevVenta) : (ventaBruta > 0 ? 1 : 0);
+
+        const semClass = getSemaphoreClass(projCierrePct, effectiveHasTarget);
+        const barColor = getSemaphoreBarColor(projCierrePct, effectiveHasTarget);
+
+        return {
+          ventaBruta,
+          prevVenta,
+          metaMes,
+          hasTarget: effectiveHasTarget,
+          cumplimientoPct,
+          faltanteMes,
+          projCierreUSD,
+          projCierrePct,
+          metaAlCorte,
+          brechaCorteUSD,
+          brechaCortePct,
+          brechaRelativaPct,
+          dailyAvgActual,
+          metaDiariaReq,
+          brechaDiariaUSD,
+          brechaDiariaPct,
+          diffMoMUSD,
+          varMoMPct,
+          comision,
+          descuento,
+          costoQSA,
+          margenNeto,
+          semClass,
+          barColor
+        };
+      };
+
+      const unitsData = HIERARCHY.map(u => {
+        const uSales = currentSales.filter(s => s.unit === u.key);
+        const uPrev = prevSales.filter(s => s.unit === u.key);
+
+        const subsData = u.subunits.map(sub => {
+          const sSales = uSales.filter(s => s.subunit === sub.key);
+          const sPrev = uPrev.filter(s => s.subunit === sub.key);
+          const sMeta = monthMetas[sub.key] || 0;
+          return {
+            ...sub,
+            stats: calcRowStats(sSales, sPrev, sMeta, sub.hasTarget)
+          };
+        });
+
+        // Meta de la unidad: tomada de METAS o suma de sus subunidades
+        let uMeta = monthMetas[u.key] || 0;
+        if (uMeta === 0 && subsData.length > 0) {
+          uMeta = subsData.reduce((acc, sub) => acc + sub.stats.metaMes, 0);
+        }
+
+        return {
+          ...u,
+          stats: calcRowStats(uSales, uPrev, uMeta, u.hasTarget),
+          subunits: subsData
+        };
+      });
+
+      // Total general de toda la empresa
+      const totalMeta = unitsData.reduce((acc, u) => acc + u.stats.metaMes, 0);
+      const totalStats = calcRowStats(currentSales, prevSales, totalMeta, true);
+
+      return { units: unitsData, total: totalStats };
+    }
+
+    function renderTopKPIs(total, bizStats) {
+      const { totalBizDays, elapsedBizDays } = bizStats;
+      const idealPct = totalBizDays > 0 ? (elapsedBizDays / totalBizDays) : 0;
+
+      document.getElementById('kpi-venta-bruta').textContent = formatUSD(total.ventaBruta);
+      document.getElementById('kpi-meta-mensual').textContent = formatUSD(total.metaMes);
+
+      const cumpEl = document.getElementById('kpi-cumplimiento-pct');
+      cumpEl.textContent = formatPct(total.cumplimientoPct || 0, 0);
+      cumpEl.className = `text-2xl font-black ${total.semClass}`;
+
+      document.getElementById('kpi-deberiamos-pct').textContent =
+        `(deberíamos llevar ${formatPct(idealPct, 1)} de la meta)`;
+
+      document.getElementById('kpi-deberiamos-usd').textContent = formatUSD(total.metaAlCorte || 0);
+
+      const isDeficit = (total.brechaCorteUSD || 0) < 0;
+      document.getElementById('kpi-brecha-label').innerHTML = isDeficit ? 'Déficit a la<br>Fecha' : 'Superávit a la<br>Fecha';
+      document.getElementById('kpi-brecha-pct-label').innerHTML = isDeficit ? '% Déficit a la<br>Fecha' : '% Superávit a la<br>Fecha';
+
+      const iconWrap = document.getElementById('kpi-brecha-icon');
+      iconWrap.innerHTML = isDeficit
+        ? `<i data-lucide="arrow-down" class="w-5 h-5"></i>`
+        : `<i data-lucide="arrow-up" class="w-5 h-5"></i>`;
+
+      const brechaUsdEl = document.getElementById('kpi-brecha-usd');
+      brechaUsdEl.textContent = formatUSD(total.brechaCorteUSD || 0);
+      brechaUsdEl.className = `text-lg sm:text-xl font-black ${total.semClass}`;
+
+      const brechaPctEl = document.getElementById('kpi-brecha-pct');
+      brechaPctEl.textContent = formatPct(total.brechaRelativaPct || 0, 0);
+      brechaPctEl.className = `text-2xl font-black ${total.semClass}`;
+
+      // Franja comparativa Mes Anterior
+      const isMoMPositive = total.diffMoMUSD >= 0;
+      const momColorClass = isMoMPositive ? 'text-emerald-600' : 'text-red-600';
+      const momIcon = document.getElementById('mom-arrow-icon');
+      momIcon.className = `inline-flex items-center justify-center w-7 h-7 rounded-full text-white ${isMoMPositive ? 'bg-emerald-600' : 'bg-iw-orange'}`;
+      momIcon.innerHTML = isMoMPositive
+        ? `<i data-lucide="trending-up" class="w-4 h-4"></i>`
+        : `<i data-lucide="trending-down" class="w-4 h-4"></i>`;
+
+      document.getElementById('kpi-mom-banner').innerHTML = `
+        LLEVAMOS <span class="${momColorClass}">${formatPct(total.varMoMPct, 0, true)}</span> QUE EN EL MISMO PERIODO DEL MES PASADO
+        <span class="mx-2 text-iw-orange">|</span>
+        EQUIVALENTES A <span class="${momColorClass}">${formatUSD(total.diffMoMUSD, true)} USD</span>
+      `;
+
+      lucide.createIcons();
+    }
+
+    function renderExecCumplimientoTable(summary) {
+      const tbody = document.getElementById('tbody-exec-cumplimiento');
+      let html = '';
+
+      const renderRow = (label, st, isUnit, isSubunit) => {
+        const rowClass = isUnit ? 'unit-row-blue' : 'bg-white hover:bg-slate-50';
+        const labelHtml = isSubunit
+          ? `<div class="pl-5 flex items-center gap-2 text-slate-700 font-semibold"><span class="text-slate-400">└</span><span>${label}</span></div>`
+          : `<span>${label}</span>`;
+
+        const metaStr = st.hasTarget ? formatUSD(st.metaMes) : '-';
+        const cumpStr = st.hasTarget ? formatPct(st.cumplimientoPct, 0) : '-';
+        const cumpBarW = st.hasTarget ? Math.min(100, Math.max(4, st.cumplimientoPct * 100)) : 0;
+
+        const faltanteStr = st.hasTarget ? formatUSD(st.faltanteMes) : '-';
+        const projPctStr = st.hasTarget ? formatPct(st.projCierrePct, 1) : '-';
+        const projBarW = st.hasTarget ? Math.min(100, Math.max(4, st.projCierrePct * 100)) : 0;
+
+        const metaCorteStr = st.hasTarget ? formatUSD(st.metaAlCorte) : '-';
+        const brechaUsdStr = st.hasTarget ? formatUSD(st.brechaCorteUSD) : '-';
+        const brechaPctStr = st.hasTarget ? formatPct(st.brechaCortePct, 1) : '-';
+
+        return `
+          <tr class="${rowClass}">
+            <td class="py-2.5 px-4">${labelHtml}</td>
+            <td class="py-2.5 px-3 text-right metric-cell">${formatUSD(st.ventaBruta)}</td>
+            <td class="py-2.5 px-3 text-right metric-cell">${metaStr}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">
+              ${st.hasTarget ? `
+                <div class="inline-flex items-center gap-2">
+                  <span class="font-extrabold ${st.semClass}">${cumpStr}</span>
+                  <span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${cumpBarW}%; background:${st.barColor}"></span></span>
+                </div>
+              ` : '<span class="text-slate-400">-</span>'}
+            </td>
+            <td class="py-2.5 px-3 text-right metric-cell font-bold ${st.semClass}">${faltanteStr}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">
+              <div class="inline-flex items-center gap-2">
+                <span class="font-extrabold ${st.semClass}">${formatUSD(st.projCierreUSD)}</span>
+                ${st.hasTarget ? `
+                  <span class="text-slate-300">|</span>
+                  <span class="font-extrabold ${st.semClass}">${projPctStr}</span>
+                  <span class="mini-bar-bg"><span class="mini-bar-fill" style="width:${projBarW}%; background:${st.barColor}"></span></span>
+                ` : ''}
+              </div>
+            </td>
+            <td class="py-2.5 px-3 text-right metric-cell">${metaCorteStr}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">
+              ${st.hasTarget ? `
+                <span class="font-extrabold ${st.semClass}">${brechaUsdStr}</span>
+                <span class="text-slate-300 mx-1">|</span>
+                <span class="font-extrabold ${st.semClass}">${brechaPctStr}</span>
+              ` : '<span class="text-slate-400">-</span>'}
+            </td>
+          </tr>
+        `;
+      };
+
+      summary.units.forEach(u => {
+        html += renderRow(u.label, u.stats, true, false);
+        u.subunits.forEach(sub => {
+          html += renderRow(sub.label, sub.stats, false, true);
+        });
+      });
+
+      // Fila Total General
+      const t = summary.total;
+      const tCumpW = Math.min(100, Math.max(4, (t.cumplimientoPct || 0) * 100));
+      const tProjW = Math.min(100, Math.max(4, (t.projCierrePct || 0) * 100));
+      html += `
+        <tr class="total-row">
+          <td class="py-3 px-4 flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-iw-orange"></i>
+            <span>Total general</span>
+          </td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.ventaBruta)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.metaMes)}</td>
+          <td class="py-3 px-3 text-center">
+            <div class="inline-flex items-center gap-2">
+              <span class="${t.semClass}">${formatPct(t.cumplimientoPct || 0, 0)}</span>
+              <span class="mini-bar-bg bg-white/20"><span class="mini-bar-fill" style="width:${tCumpW}%; background:${t.barColor}"></span></span>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-right ${t.semClass}">${formatUSD(t.faltanteMes || 0)}</td>
+          <td class="py-3 px-3 text-center">
+            <div class="inline-flex items-center gap-2">
+              <span class="${t.semClass}">${formatUSD(t.projCierreUSD)}</span>
+              <span class="opacity-40">|</span>
+              <span class="${t.semClass}">${formatPct(t.projCierrePct || 0, 1)}</span>
+              <span class="mini-bar-bg bg-white/20"><span class="mini-bar-fill" style="width:${tProjW}%; background:${t.barColor}"></span></span>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.metaAlCorte || 0)}</td>
+          <td class="py-3 px-3 text-center">
+            <span class="${t.semClass}">${formatUSD(t.brechaCorteUSD || 0)}</span>
+            <span class="opacity-40 mx-1">|</span>
+            <span class="${t.semClass}">${formatPct(t.brechaCortePct || 0, 1)}</span>
+          </td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function renderExecMoMTable(summary) {
+      const tbody = document.getElementById('tbody-exec-mom');
+      let html = '';
+
+      const renderRow = (label, st, isUnit, isSubunit) => {
+        const rowClass = isUnit ? 'unit-row-blue' : 'bg-white hover:bg-slate-50';
+        const labelHtml = isSubunit
+          ? `<div class="pl-5 flex items-center gap-2 text-slate-700 font-semibold"><span class="text-slate-400">└</span><span>${label}</span></div>`
+          : `<span>${label}</span>`;
+
+        const varColor = st.diffMoMUSD >= 0 ? 'sem-green' : 'sem-red';
+
+        return `
+          <tr class="${rowClass}">
+            <td class="py-2.5 px-4">${labelHtml}</td>
+            <td class="py-2.5 px-4 text-right metric-cell">${formatUSD(st.prevVenta)}</td>
+            <td class="py-2.5 px-4 text-right metric-cell">${formatUSD(st.ventaBruta)}</td>
+            <td class="py-2.5 px-4 text-center metric-cell font-extrabold ${varColor}">${formatPct(st.varMoMPct, 0)}</td>
+            <td class="py-2.5 px-4 text-right metric-cell font-extrabold ${varColor}">${formatUSD(st.diffMoMUSD)}</td>
+          </tr>
+        `;
+      };
+
+      summary.units.forEach(u => {
+        html += renderRow(u.label, u.stats, true, false);
+        u.subunits.forEach(sub => {
+          html += renderRow(sub.label, sub.stats, false, true);
+        });
+      });
+
+      const t = summary.total;
+      const tColor = t.diffMoMUSD >= 0 ? 'sem-green' : 'sem-red';
+      html += `
+        <tr class="total-row">
+          <td class="py-3 px-4">Total general</td>
+          <td class="py-3 px-4 text-right">${formatUSD(t.prevVenta)}</td>
+          <td class="py-3 px-4 text-right">${formatUSD(t.ventaBruta)}</td>
+          <td class="py-3 px-4 text-center ${tColor}">${formatPct(t.varMoMPct, 0)}</td>
+          <td class="py-3 px-4 text-right ${tColor}">${formatUSD(t.diffMoMUSD)}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
+    function renderExecMarginTable(summary) {
+      const tbody = document.getElementById('tbody-exec-margen');
+      let html = '';
+
+      // En esta tabla se muestran únicamente las unidades operativas principales (excluyendo TAM si venta es 0)
+      summary.units.forEach(u => {
+        const st = u.stats;
+        if (u.key === 'TAM' && st.ventaBruta === 0) return;
+
+        const vb = st.ventaBruta;
+        const comPct = vb > 0 ? (st.comision / vb) : 0;
+        const descPct = vb > 0 ? (st.descuento / vb) : 0;
+        const qsaPct = vb > 0 ? (st.costoQSA / vb) : 0;
+        const marPct = vb > 0 ? (st.margenNeto / vb) : 0;
+
+        html += `
+          <tr class="unit-row-blue">
+            <td class="py-2.5 px-4 uppercase">${u.label}</td>
+            <td class="py-2.5 px-3 text-right metric-cell">${formatUSD(vb)}</td>
+            <td class="py-2.5 px-3 text-right metric-cell">${formatUSD(st.comision)}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">${formatPct(comPct, 0)}</td>
+            <td class="py-2.5 px-3 text-right metric-cell">${formatUSD(st.descuento)}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">${formatPct(descPct, 0)}</td>
+            <td class="py-2.5 px-3 text-right metric-cell">${formatUSD(st.costoQSA)}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">${formatPct(qsaPct, 0)}</td>
+            <td class="py-2.5 px-3 text-right metric-cell font-black">${formatUSD(st.margenNeto)}</td>
+            <td class="py-2.5 px-3 text-center metric-cell font-black">${formatPct(marPct, 0)}</td>
+          </tr>
+        `;
+      });
+
+      const t = summary.total;
+      const tvb = t.ventaBruta;
+      html += `
+        <tr class="total-row">
+          <td class="py-3 px-4">Total general</td>
+          <td class="py-3 px-3 text-right">${formatUSD(tvb)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.comision)}</td>
+          <td class="py-3 px-3 text-center">${formatPct(tvb > 0 ? t.comision / tvb : 0, 0)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.descuento)}</td>
+          <td class="py-3 px-3 text-center">${formatPct(tvb > 0 ? t.descuento / tvb : 0, 0)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.costoQSA)}</td>
+          <td class="py-3 px-3 text-center">${formatPct(tvb > 0 ? t.costoQSA / tvb : 0, 0)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.margenNeto)}</td>
+          <td class="py-3 px-3 text-center">${formatPct(tvb > 0 ? t.margenNeto / tvb : 0, 0)}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+    }
+
+    // =========================================================================
+    // TABLAS DEL REPORTE COMERCIAL (RADAR WHATSAPP)
+    // =========================================================================
+    function renderComResultadosTable(summary) {
+      const tbody = document.getElementById('tbody-com-resultados');
+      let html = '';
+
+      const renderRow = (label, st, isUnit, isSubunit) => {
+        const rowClass = isUnit ? 'unit-row-orange' : 'bg-white hover:bg-slate-50';
+        const tdLabelClass = isUnit ? 'unit-label' : '';
+        const labelHtml = isSubunit
+          ? `<div class="pl-5 flex items-center gap-2 text-slate-700 font-semibold"><span class="text-slate-400">└</span><span>${label}</span></div>`
+          : `<span>${label}</span>`;
+
+        const metaStr = st.hasTarget ? formatUSD(st.metaMes) : '-';
+        const metaCorteStr = st.hasTarget ? formatUSD(st.metaAlCorte) : '-';
+        const brechaStr = st.hasTarget
+          ? `<span class="font-extrabold ${st.semClass}">${formatUSD(st.brechaCorteUSD)}</span> <span class="text-slate-300 mx-1">|</span> <span class="font-extrabold ${st.semClass}">${formatPct(st.brechaRelativaPct, 0)}</span>`
+          : '<span class="text-slate-400">-</span>';
+
+        const projStr = st.hasTarget
+          ? `<span class="font-extrabold ${st.semClass}">${formatUSD(st.projCierreUSD)}</span> <span class="text-slate-300 mx-1">|</span> <span class="font-extrabold ${st.semClass}">${formatPct(st.projCierrePct, 1)}</span>`
+          : `<span class="font-bold text-slate-600">${formatUSD(st.projCierreUSD)}</span> <span class="text-slate-300 mx-1">|</span> <span class="text-slate-400">-</span>`;
+
+        return `
+          <tr class="${rowClass}">
+            <td class="py-2.5 px-4 ${tdLabelClass}">${labelHtml}</td>
+            <td class="py-2.5 px-3 text-right metric-cell text-iw-blue font-bold">${metaStr}</td>
+            <td class="py-2.5 px-3 text-right metric-cell text-iw-blue font-bold">${metaCorteStr}</td>
+            <td class="py-2.5 px-3 text-right metric-cell text-iw-blue font-extrabold">${formatUSD(st.ventaBruta)}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">${brechaStr}</td>
+            <td class="py-2.5 px-3 text-center metric-cell">${projStr}</td>
+          </tr>
+        `;
+      };
+
+      summary.units.forEach(u => {
+        html += renderRow(u.label, u.stats, true, false);
+        u.subunits.forEach(sub => {
+          html += renderRow(sub.label, sub.stats, false, true);
+        });
+      });
+
+      const t = summary.total;
+      html += `
+        <tr class="total-row">
+          <td class="py-3 px-4 flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-iw-orange"></i>
+            <span>Total general</span>
+          </td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.metaMes)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.metaAlCorte || 0)}</td>
+          <td class="py-3 px-3 text-right">${formatUSD(t.ventaBruta)}</td>
+          <td class="py-3 px-3 text-center">
+            <span class="${t.semClass}">${formatUSD(t.brechaCorteUSD || 0)}</span>
+            <span class="opacity-40 mx-1">|</span>
+            <span class="${t.semClass}">${formatPct(t.brechaRelativaPct || 0, 0)}</span>
+          </td>
+          <td class="py-3 px-3 text-center">
+            <span class="${t.semClass}">${formatUSD(t.projCierreUSD)}</span>
+            <span class="opacity-40 mx-1">|</span>
+            <span class="${t.semClass}">${formatPct(t.projCierrePct || 0, 1)}</span>
+          </td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function renderComDiarioTable(summary, bizStats) {
+      const tbody = document.getElementById('tbody-com-diario');
+      let html = '';
+
+      const renderRow = (label, st, isUnit, isSubunit) => {
+        const rowClass = isUnit ? 'unit-row-orange' : 'bg-white hover:bg-slate-50';
+        const tdLabelClass = isUnit ? 'unit-label' : '';
+        const labelHtml = isSubunit
+          ? `<div class="pl-5 flex items-center gap-2 text-slate-700 font-semibold"><span class="text-slate-400">└</span><span>${label}</span></div>`
+          : `<span>${label}</span>`;
+
+        const metaDiariaStr = st.metaDiariaReq !== null ? formatUSD(st.metaDiariaReq) : '-';
+        const brechaUsdStr = st.brechaDiariaUSD !== null ? formatUSD(st.brechaDiariaUSD) : '-';
+        const brechaPctStr = st.brechaDiariaPct !== null ? formatPct(st.brechaDiariaPct, 0) : '-';
+
+        return `
+          <tr class="${rowClass}">
+            <td class="py-2.5 px-4 ${tdLabelClass}">${labelHtml}</td>
+            <td class="py-2.5 px-4 text-right metric-cell text-iw-blue font-bold">${metaDiariaStr}</td>
+            <td class="py-2.5 px-4 text-right metric-cell text-iw-blue font-extrabold">${formatUSD(st.dailyAvgActual)}</td>
+            <td class="py-2.5 px-4 text-right metric-cell font-extrabold ${st.semClass}">${brechaUsdStr}</td>
+            <td class="py-2.5 px-4 text-center metric-cell font-extrabold ${st.semClass}">${brechaPctStr}</td>
+          </tr>
+        `;
+      };
+
+      summary.units.forEach(u => {
+        html += renderRow(u.label, u.stats, true, false);
+        u.subunits.forEach(sub => {
+          html += renderRow(sub.label, sub.stats, false, true);
+        });
+      });
+
+      const t = summary.total;
+      html += `
+        <tr class="total-row">
+          <td class="py-3 px-4 flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-iw-orange"></i>
+            <span>Total general</span>
+          </td>
+          <td class="py-3 px-4 text-right">${t.metaDiariaReq !== null ? formatUSD(t.metaDiariaReq) : '-'}</td>
+          <td class="py-3 px-4 text-right">${formatUSD(t.dailyAvgActual)}</td>
+          <td class="py-3 px-4 text-right ${t.semClass}">${t.brechaDiariaUSD !== null ? formatUSD(t.brechaDiariaUSD) : '-'}</td>
+          <td class="py-3 px-4 text-center ${t.semClass}">${t.brechaDiariaPct !== null ? formatPct(t.brechaDiariaPct, 0) : '-'}</td>
+        </tr>
+      `;
+
+      tbody.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    // =========================================================================
+    // GRÁFICO 1: VENTA DIARIA GENERAL TOTAL EMPRESA
+    // =========================================================================
+    function renderDailySalesChart(year, monthIdx, cutDate, totalMetaMes, totalBizDays) {
+      const idealDaily = totalBizDays > 0 ? (totalMetaMes / totalBizDays) : 0;
+      document.getElementById('badge-ideal-daily').textContent = formatUSD(idealDaily);
+
+      const maxDay = cutDate.getDate();
+      const labels = [];
+      const values = [];
+      const idealLine = [];
+      let stripHtml = '';
+
+      for (let d = 1; d <= maxDay; d++) {
+        const curDate = new Date(year, monthIdx, d);
+        const iso = toISODate(curDate);
+        const dayTotal = rawSales
+          .filter(s => s.isoDate === iso)
+          .reduce((acc, s) => acc + s.ventaBruta, 0);
+
+        labels.push(`${d}/${monthIdx + 1}`);
+        values.push(Number(dayTotal.toFixed(2)));
+        idealLine.push(Number(idealDaily.toFixed(2)));
+
+        const isBiz = isVenezuelaBusinessDay(curDate);
+        const dayName = DAY_NAMES_ES[curDate.getDay()];
+        const badgeBg = isBiz ? 'bg-iw-blue text-white' : 'bg-iw-orange text-white';
+        const cardBg = isBiz ? 'bg-iw-blueSoft border-blue-200 text-iw-blue' : 'bg-iw-orangeLight border-orange-200 text-iw-orange';
+
+        stripHtml += `
+          <div class="min-w-[68px] rounded-lg border ${cardBg} overflow-hidden text-center shadow-2xs">
+            <div class="${badgeBg} text-xs font-black py-0.5">${d}</div>
+            <div class="py-1 px-1">
+              <div class="text-[9px] font-extrabold leading-tight">${dayName}</div>
+              <div class="text-[9px] font-semibold opacity-80">${d}/${monthIdx + 1}/${year}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('daily-calendar-strip').innerHTML = stripHtml;
+
+      const ctx = document.getElementById('chart-daily-sales').getContext('2d');
+      if (dailyChart) dailyChart.destroy();
+
+      dailyChart = new Chart(ctx, {
+        type: 'line',
+        plugins: [ChartDataLabels],
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Venta diaria total (USD)',
+              data: values,
+              borderColor: '#0056B3',
+              backgroundColor: 'rgba(0, 86, 179, 0.08)',
+              borderWidth: 3,
+              pointBackgroundColor: '#0056B3',
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              tension: 0.15,
+              fill: true,
+              datalabels: {
+                align: 'top',
+                offset: 6,
+                color: '#0F172A',
+                font: { weight: '800', size: 11, family: 'Inter' },
+                formatter: (v) => formatUSD(v)
+              }
+            },
+            {
+              label: 'Promedio diario ideal',
+              data: idealLine,
+              borderColor: '#F58220',
+              borderWidth: 2.5,
+              borderDash: [8, 6],
+              pointRadius: 0,
+              fill: false,
+              datalabels: { display: false }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 28, right: 20, left: 10 } },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { font: { family: 'Inter', weight: '700', size: 12 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${formatUSD(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              suggestedMax: Math.max(...values, idealDaily) * 1.18,
+              ticks: {
+                color: '#004A99',
+                font: { family: 'Inter', weight: '700', size: 11 },
+                callback: (val) => formatUSD(val)
+              },
+              grid: { color: '#E2E8F0' }
+            },
+            x: {
+              ticks: {
+                color: '#475569',
+                font: { family: 'Inter', weight: '700', size: 11 }
+              },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // BLOQUE 6: RADAR DE EJECUTIVOS COMERCIALES + VENDEDORES + GRÁFICO TORTA
+    // =========================================================================
+    function toggleExecutiveExpand(execName) {
+      if (expandedExecutives.has(execName)) {
+        expandedExecutives.delete(execName);
+      } else {
+        expandedExecutives.add(execName);
+      }
+      recalculateAndRender();
+    }
+
+    function renderExecutivesRadar(currentSales) {
+      const totalVenta = currentSales.reduce((acc, s) => acc + s.ventaBruta, 0);
+      const execMap = {};
+
+      currentSales.forEach(s => {
+        const ex = s.executive || 'Sin Asignar';
+        if (!execMap[ex]) {
+          execMap[ex] = { name: ex, total: 0, vendedores: {} };
+        }
+        execMap[ex].total += s.ventaBruta;
+
+        if (s.vendedor && s.vendedor.toUpperCase() !== ex.toUpperCase()) {
+          execMap[ex].vendedores[s.vendedor] = (execMap[ex].vendedores[s.vendedor] || 0) + s.ventaBruta;
+        }
+      });
+
+      const sortedExecs = Object.values(execMap)
+        .filter(e => e.total > 0)
+        .sort((a, b) => b.total - a.total);
+
+      let tbodyHtml = '';
+      sortedExecs.forEach((ex, idx) => {
+        const color = PIE_COLORS[idx % PIE_COLORS.length];
+        const share = totalVenta > 0 ? (ex.total / totalVenta) : 0;
+        const shareStr = share < 0.01 && share > 0 ? formatPct(share, 1) : formatPct(share, 0);
+        const subVendors = Object.entries(ex.vendedores).sort((a, b) => b[1] - a[1]);
+        const hasVendors = subVendors.length > 0;
+        const isExpanded = expandedExecutives.has(ex.name);
+
+        tbodyHtml += `
+          <tr class="bg-white hover:bg-slate-50">
+            <td class="py-2 px-3 font-semibold text-slate-800 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full shrink-0 shadow-2xs" style="background:${color}"></span>
+                <span>${ex.name}</span>
+              </div>
+              ${hasVendors ? `
+                <button onclick="toggleExecutiveExpand('${ex.name.replace(/'/g, "\\'")}')" class="px-1.5 py-0.5 text-[10px] font-extrabold rounded bg-iw-blueLight text-iw-blue hover:bg-iw-blue hover:text-white transition">
+                  ${isExpanded ? '−' : '+'} ${subVendors.length} vend.
                 </button>
-            </div>
-        </div>
-    </header>
+              ` : ''}
+            </td>
+            <td class="py-2 px-3 text-right font-bold text-slate-700">${formatUSD(ex.total)}</td>
+            <td class="py-2 px-3 text-right font-extrabold text-iw-blue">${shareStr}</td>
+          </tr>
+        `;
 
-    <!-- NAVEGACIÓN DE VISTAS -->
-    <main class="max-w-7xl mx-auto px-4 py-6">
-        <div class="flex border-b border-slate-300 mb-6 gap-6">
-            <button onclick="cambiarVista('ejecutivo')" id="tabEjecutivo" class="pb-3 font-semibold text-blue-700 border-b-2 border-blue-700 transition">📊 Reporte Ejecutivo</button>
-            <button onclick="cambiarVista('comercial')" id="tabComercial" class="pb-3 font-semibold text-slate-500 hover:text-slate-800 transition">📱 Radar Comercial (Tablas)</button>
-        </div>
-
-        <!-- VISTA EJECUTIVA -->
-        <section id="vistaEjecutivo" class="space-y-6">
-            <!-- Tarjetas Resumen de Cabecera -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl card-shadow border-l-4 border-blue-800">
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Venta Neta Real (Mes)</p>
-                    <h3 id="cardVentaNeta" class="text-2xl font-bold text-slate-800 mt-1">$0.00</h3>
-                    <p id="cardMetaTotal" class="text-xs text-slate-400 mt-1">Meta: $0.00</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl card-shadow border-l-4 border-emerald-600">
-                    <p class="text-xs font-semibold text-slate-500 uppercase">% Cumplimiento Global</p>
-                    <h3 id="cardCumplimiento" class="text-2xl font-bold text-emerald-600 mt-1">0%</h3>
-                    <p id="cardProyeccion" class="text-xs text-slate-400 mt-1">Proyección Cierre: 0%</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl card-shadow border-l-4 border-indigo-600">
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Días Hábiles (Venezuela)</p>
-                    <h3 id="cardDiasHabiles" class="text-2xl font-bold text-slate-800 mt-1">0 / 0</h3>
-                    <p id="cardDiasProgreso" class="text-xs text-slate-400 mt-1">Transcurridos / Total</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl card-shadow border-l-4 border-amber-500">
-                    <p class="text-xs font-semibold text-slate-500 uppercase">Venta Diaria Necesaria</p>
-                    <h3 id="cardDiariaNecesaria" class="text-2xl font-bold text-slate-800 mt-1">$0.00</h3>
-                    <p class="text-xs text-slate-400 mt-1">Para cumplir meta mensual</p>
-                </div>
-            </div>
-
-            <!-- Tabla de Unidades y Metas -->
-            <div class="bg-white rounded-xl card-shadow overflow-hidden">
-                <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <h2 class="font-bold text-slate-800">Cumplimiento y Proyecciones por Unidad y Subunidad</h2>
-                    <span class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-1 rounded">Semaforización Inteligente</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse" id="tablaUnidades">
-                        <thead class="bg-slate-100 text-xs uppercase text-slate-600 font-semibold">
-                            <tr>
-                                <th class="p-3">Unidad / Subunidad</th>
-                                <th class="p-3 text-right">Meta (USD)</th>
-                                <th class="p-3 text-right">Venta Real</th>
-                                <th class="p-3 text-center">% Cumplimiento</th>
-                                <th class="p-3 text-right">Proyección Cierre</th>
-                                <th class="p-3 text-center">Semáforo</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 text-sm">
-                            <!-- Inyectado por JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Gráficos -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white p-5 rounded-xl card-shadow">
-                    <h3 class="font-bold text-slate-800 mb-4">Ventas Reales vs. Metas por Unidad</h3>
-                    <div class="relative h-72"><canvas id="graficoUnidades"></canvas></div>
-                </div>
-                <div class="bg-white p-5 rounded-xl card-shadow">
-                    <h3 class="font-bold text-slate-800 mb-4">Comportamiento Diario / Proyección</h3>
-                    <div class="relative h-72"><canvas id="graficoTendencia"></canvas></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA RADAR COMERCIAL (EN FORMATO DE TABLAS) -->
-        <section id="vistaComercial" class="hidden space-y-6">
-            <div class="bg-white rounded-xl card-shadow p-6 space-y-6 border border-slate-200">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
-                    <div>
-                        <h2 class="font-bold text-slate-800 text-lg">📱 Radar Comercial - Resumen Estructurado</h2>
-                        <p class="text-xs text-slate-500">Visualización en tablas formateadas para análisis rápido por canales.</p>
-                    </div>
-                    <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-lg text-xs font-semibold">
-                        Mes Analizado: <span id="lblMesComercial">Noviembre</span>
-                    </div>
-                </div>
-
-                <!-- Tabla Resumen Radar -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse" id="tablaRadarComercial">
-                        <thead class="bg-slate-900 text-white text-xs uppercase font-semibold">
-                            <tr>
-                                <th class="p-3">Unidad Comercial</th>
-                                <th class="p-3 text-right">Meta (USD)</th>
-                                <th class="p-3 text-right">Venta Acumulada</th>
-                                <th class="p-3 text-center">Cumplimiento</th>
-                                <th class="p-3 text-center">Estado Alerta</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 text-sm">
-                            <!-- Inyectado por JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script>
-        const SHEET_ID = "1et-kCxUpQDmbsBF7u0GGy65Ed45I7kG-Cgt2u-epRKY";
-        const URL_DATA = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=DATA`;
-        const URL_METAS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=METAS`;
-
-        let rawData = [];
-        let rawMetas = [];
-        let estadosDisponibles = new Set();
-        let chartUnidadesInstance = null;
-        let chartTendenciaInstance = null;
-
-        const feriadosVenezuela2026 = ['2026-01-01', '2026-02-16', '2026-02-17', '2026-04-02', '2026-04-03', '2026-04-19', '2026-05-01', '2026-06-24', '2026-07-05', '2026-07-24', '2026-08-15', '2026-10-12', '2026-11-01', '2026-12-25'];
-
-        async function init() {
-            await cargarDatosSheet();
-            document.getElementById('mesSelect').addEventListener('change', procesarDatos);
+        if (hasVendors && isExpanded) {
+          subVendors.forEach(([vName, vTotal]) => {
+            const vShare = totalVenta > 0 ? (vTotal / totalVenta) : 0;
+            tbodyHtml += `
+              <tr class="bg-slate-50/90 text-xs">
+                <td class="py-1.5 pl-8 pr-3 text-slate-600 flex items-center gap-1.5">
+                  <span class="text-slate-400">↳</span>
+                  <span>${vName}</span>
+                </td>
+                <td class="py-1.5 px-3 text-right text-slate-600">${formatUSD(vTotal)}</td>
+                <td class="py-1.5 px-3 text-right text-slate-500 font-semibold">${formatPct(vShare, 1)}</td>
+              </tr>
+            `;
+          });
         }
+      });
 
-        async function cargarDatosSheet() {
-            try {
-                // Cargar DATA
-                const resData = await fetch(URL_DATA);
-                const textData = await resData.text();
-                const jsonDat = JSON.parse(textData.substring(47, textData.length - 2));
-                
-                const colsData = jsonDat.table.cols.map(c => c ? c.label : '');
-                rawData = jsonDat.table.rows.map(r => {
-                    let obj = {};
-                    r.c.forEach((cell, idx) => {
-                        obj[colsData[idx] || `col_${idx}`] = cell ? cell.v : null;
-                    });
-                    return obj;
-                });
+      tbodyHtml += `
+        <tr class="total-row">
+          <td class="py-2.5 px-3">Total general</td>
+          <td class="py-2.5 px-3 text-right">${formatUSD(totalVenta)}</td>
+          <td class="py-2.5 px-3 text-right">100%</td>
+        </tr>
+      `;
 
-                // Extraer estados únicos para el filtro dinámico
-                estadosDisponibles.clear();
-                rawData.forEach(row => {
-                    const est = String(row['Estado'] || row['col_21'] || '').trim().toUpperCase();
-                    if (est && est !== 'NULL') estadosDisponibles.add(est);
-                });
+      document.getElementById('tbody-exec-ej-1').innerHTML = tbodyHtml;
+      document.getElementById('tbody-exec-ej-2').innerHTML = tbodyHtml;
 
-                construirCheckboxesEstados();
+      // Renderizar ambos gráficos de torta sincronizados
+      const labels = sortedExecs.map(e => e.name);
+      const dataVals = sortedExecs.map(e => Number(e.total.toFixed(2)));
+      const bgColors = sortedExecs.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]);
 
-                // Cargar METAS
-                const resMetas = await fetch(URL_METAS);
-                const textMetas = await resMetas.text();
-                const jsonMet = JSON.parse(textMetas.substring(47, textMetas.length - 2));
-
-                const colsMetas = jsonMet.table.cols.map(c => c ? c.label : '');
-                rawMetas = jsonMet.table.rows.map(r => {
-                    let obj = {};
-                    r.c.forEach((cell, idx) => {
-                        obj[colsMetas[idx] || `col_${idx}`] = cell ? cell.v : null;
-                    });
-                    return obj;
-                });
-
-                procesarDatos();
-            } catch (e) {
-                console.error("Error conectando con Google Sheets:", e);
-                alert("Error al conectar con la hoja de cálculo. Valida que los permisos estén públicos como Lector.");
+      const buildPieConfig = () => ({
+        type: 'pie',
+        plugins: [ChartDataLabels],
+        data: {
+          labels,
+          datasets: [{
+            data: dataVals,
+            backgroundColor: bgColors,
+            borderColor: '#FFFFFF',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const val = ctx.parsed;
+                  const pct = totalVenta > 0 ? (val / totalVenta) : 0;
+                  return `${ctx.label}: ${formatUSD(val)} (${formatPct(pct, 1)})`;
+                }
+              }
+            },
+            datalabels: {
+              color: '#FFFFFF',
+              font: { weight: '800', size: 12, family: 'Inter' },
+              formatter: (value) => {
+                const pct = totalVenta > 0 ? (value / totalVenta) : 0;
+                if (pct < 0.03) return ''; // Evitar solapamiento en rebanadas muy pequeñas
+                return formatPct(pct, 0);
+              }
             }
+          }
         }
+      });
 
-        function construirCheckboxesEstados() {
-            const contenedor = document.getElementById('listaCheckboxesEstados');
-            contenedor.innerHTML = '';
-            
-            // Por defecto marcamos EMITIDO y PRECOMPRA si existen, o todos si prefieres
-            Array.from(estadosDisponibles).sort().forEach(est => {
-                const isChecked = (est === 'EMITIDO' || est === 'PRECOMPRA') ? 'checked' : '';
-                const div = document.createElement('div');
-                div.className = "flex items-center space-x-2";
-                div.innerHTML = `
-                    <input type="checkbox" value="${est}" ${isChecked} class="chk-estado rounded text-blue-600 focus:ring-blue-500 h-4 w-4" onchange="actualizarContadorEstados()">
-                    <label class="text-xs font-medium text-slate-700 cursor-pointer">${est}</label>
-                `;
-                contenedor.appendChild(div);
-            });
-            actualizarContadorEstados();
-        }
+      if (pieChart1) pieChart1.destroy();
+      if (pieChart2) pieChart2.destroy();
 
-        function actualizarContadorEstados() {
-            const checks = document.querySelectorAll('.chk-estado:checked');
-            document.getElementById('contadorEstados').innerText = checks.length;
-        }
+      pieChart1 = new Chart(document.getElementById('chart-ej-pie-1').getContext('2d'), buildPieConfig());
+      pieChart2 = new Chart(document.getElementById('chart-ej-pie-2').getContext('2d'), buildPieConfig());
+    }
 
-        function marcarTodosestado(seleccionar) {
-            // Placeholder si se requiere
-        }
+    // =========================================================================
+    // NAVEGACIÓN DE PESTAÑAS Y MODO CAPTURA WHATSAPP
+    // =========================================================================
+    function switchTab(tab) {
+      const viewExec = document.getElementById('view-ejecutivo');
+      const viewCom = document.getElementById('view-comercial');
+      const btnExec = document.getElementById('tab-btn-ejecutivo');
+      const btnCom = document.getElementById('tab-btn-comercial');
 
-        function marcarTodosEstados(marcar) {
-            document.querySelectorAll('.chk-estado').forEach(chk => chk.checked = marcar);
-            actualizarContadorEstados();
-            procesarDatos();
-        }
+      if (tab === 'ejecutivo') {
+        viewExec.classList.remove('hidden');
+        viewCom.classList.add('hidden');
+        btnExec.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-iw-blue text-white shadow-sm';
+        btnCom.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-iw-blue';
+      } else {
+        viewExec.classList.add('hidden');
+        viewCom.classList.remove('hidden');
+        btnCom.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all bg-iw-orange text-white shadow-sm';
+        btnExec.className = 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:text-iw-blue';
+      }
+      // Reajustar gráficos al cambiar de pestaña
+      if (dailyChart) dailyChart.resize();
+      if (pieChart1) pieChart1.resize();
+      if (pieChart2) pieChart2.resize();
+    }
 
-        function toggleFiltroEstados() {
-            const dropdown = document.getElementById('dropdownEstados');
-            dropdown.classList.toggle('hidden');
-        }
+    function toggleCaptureMode() {
+      document.body.classList.toggle('capture-mode');
+      const exitBtn = document.getElementById('exit-capture-btn');
+      exitBtn.classList.toggle('hidden');
+    }
 
-        function cambiarVista(vista) {
-            const btnEjec = document.getElementById('tabEjecutivo');
-            const btnCom = document.getElementById('tabComercial');
-            const secEjec = document.getElementById('vistaEjecutivo');
-            const secCom = document.getElementById('vistaComercial');
-
-            if (vista === 'ejecutivo') {
-                btnEjec.className = "pb-3 font-semibold text-blue-700 border-b-2 border-blue-700 transition";
-                btnCom.className = "pb-3 font-semibold text-slate-500 hover:text-slate-800 transition";
-                secEjec.classList.remove('hidden');
-                secCom.classList.add('hidden');
-            } else {
-                btnCom.className = "pb-3 font-semibold text-blue-700 border-b-2 border-blue-700 transition";
-                btnEjec.className = "pb-3 font-semibold text-slate-500 hover:text-slate-800 transition";
-                secCom.classList.remove('hidden');
-                secEjec.classList.add('hidden');
-            }
-        }
-
-        function calcularDiasHabilesMes(anio, mes) {
-            let totalDias = 0;
-            let transcurridos = 0;
-            const hoy = new Date();
-            const diasEnMes = new Date(anio, mes, 0).getDate();
-
-            for (let d = 1; d <= diasEnMes; d++) {
-                const fechaStr = `${anio}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const fechaObj = new Date(anio, mes - 1, d);
-                const diaSemana = fechaObj.getDay();
-
-                if (diaSemana !== 0 && diaSemana !== 6 && !feriadosVenezuela2026.includes(fechaStr)) {
-                    totalDias++;
-                    if (fechaObj <= hoy) transcurridos++;
-                }
-            }
-            return { totalDias, transcurridos: Math.min(transcurridos, totalDias) };
-        }
-
-        function procesarDatos() {
-            const mesSeleccionado = parseInt(document.getElementById('mesSelect').value);
-            const anio = 2026;
-
-            // Actualizar texto mes comercial
-            const nombresMeses = {7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'};
-            document.getElementById('lblMesComercial').innerText = nombresMeses[mesSeleccionado];
-
-            // Obtener estados seleccionados en el checklist
-            const estadosSeleccionados = Array.from(document.querySelectorAll('.chk-estado:checked')).map(chk => chk.value);
-
-            const { totalDias, transcurridos } = calcularDiasHabilesMes(anio, mesSeleccionado);
-
-            // Filtrar registros de DATA
-            const registrosValidos = rawData.filter(row => {
-                const estado = String(row['Estado'] || row['col_21'] || '').trim().toUpperCase();
-                if (!estadosSeleccionados.includes(estado)) return false;
-
-                const fechaEmisionStr = row['Fecha Emisión'] || row['col_17'];
-                if (!fechaEmisionStr) return false;
-
-                const partesFecha = String(fechaEmisionStr).split('/');
-                if (partesFecha.length < 3) return false;
-                
-                let mesEmision, anioEmision;
-                if (parseInt(partesFecha[0]) > 12) {
-                    mesEmision = parseInt(partesFecha[1]);
-                    anioEmision = parseInt(partesFecha[2]);
-                } else {
-                    mesEmision = parseInt(partesFecha[0]);
-                    anioEmision = parseInt(partesFecha[2]);
-                }
-
-                return mesEmision === mesSeleccionado && anioEmision === anio;
-            });
-
-            // Agrupar ventas por Unidad
-            let ventasPorUnidad = {};
-            let ventaTotalNeta = 0;
-
-            registrosValidos.forEach(row => {
-                const unidad = String(row['UNIDAD'] || row['col_69'] || 'OTRAS').trim();
-                const ventaNeta = parseFloat(row['venta neta'] || row['col_61'] || 0);
-
-                if (!ventasPorUnidad[unidad]) ventasPorUnidad[unidad] = 0;
-                ventasPorUnidad[unidad] += ventaNeta;
-                ventaTotalNeta += ventaNeta;
-            });
-
-            // Extraer Metas del mes
-            const columnaMetaMap = { 7: 'col_1', 8: 'col_2', 9: 'col_3', 10: 'col_4', 11: 'col_5', 12: 'col_6' };
-            const colMetaKey = columnaMetaMap[mesSeleccionado];
-
-            let metasPorUnidad = {};
-            let metaTotalGlobal = 0;
-
-            rawMetas.forEach(row => {
-                const unidadMeta = String(row['UNIDAD'] || row['col_0'] || '').trim();
-                const valorMeta = parseFloat(row[colMetaKey] || 0);
-                if (unidadMeta && unidadMeta !== 'TOTAL') {
-                    metasPorUnidad[unidadMeta] = valorMeta;
-                    metaTotalGlobal += valorMeta;
-                }
-            });
-
-            // Indicadores Generales
-            const cumplimientoGlobal = metaTotalGlobal > 0 ? (ventaTotalNeta / metaTotalGlobal) * 100 : 0;
-            const proyeccionCierre = transcurridos > 0 ? (ventaTotalNeta / transcurridos) * totalDias : 0;
-            const cumplimientoProyeccion = metaTotalGlobal > 0 ? (proyeccionCierre / metaTotalGlobal) * 100 : 0;
-            const diariaNecesaria = (totalDias - transcurridos) > 0 ? Math.max(0, (metaTotalGlobal - ventaTotalNeta) / (totalDias - transcurridos)) : 0;
-
-            document.getElementById('cardVentaNeta').innerText = `$${ventaTotalNeta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('cardMetaTotal').innerText = `Meta: $${metaTotalGlobal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            document.getElementById('cardCumplimiento').innerText = `${cumplimientoGlobal.toFixed(1)}%`;
-            document.getElementById('cardProyeccion').innerText = `Proyección Cierre: ${cumplimientoProyeccion.toFixed(1)}%`;
-            document.getElementById('cardDiasHabiles').innerText = `${transcurridos} / ${totalDias}`;
-            document.getElementById('cardDiariaNecesaria').innerText = `$${diariaNecesaria.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-            // Llenar Tabla Principal (Ejecutiva)
-            const tbody = document.querySelector('#tablaUnidades tbody');
-            tbody.innerHTML = '';
-
-            // Llenar Tabla Secundaria (Radar Comercial en formato de tabla)
-            const tbodyComercial = document.querySelector('#tablaRadarComercial tbody');
-            tbodyComercial.innerHTML = '';
-
-            let nombresUnidades = Array.from(new Set([...Object.keys(metasPorUnidad), ...Object.keys(ventasPorUnidad)]));
-
-            nombresUnidades.forEach(uni => {
-                const meta = metasPorUnidad[uni] || 0;
-                const real = ventasPorUnidad[uni] || 0;
-                const cump = meta > 0 ? (real / meta) * 100 : 0;
-                const proyUni = transcurridos > 0 ? (real / transcurridos) * totalDias : 0;
-                const cumpProy = meta > 0 ? (proyUni / meta) * 100 : 0;
-
-                let badgeColor = 'bg-emerald-100 text-emerald-800';
-                let semaforoTxt = '🟢 Meta Cumplida';
-                if (uni.includes('AEROPUERTO') || uni.includes('CENTROAMÉRICA')) {
-                    semaforoTxt = '⚪ Neutro';
-                    badgeColor = 'bg-slate-100 text-slate-700';
-                } else if (cumpProy < 80) {
-                    semaforoTxt = '🔴 Crítico';
-                    badgeColor = 'bg-rose-100 text-rose-800';
-                } else if (cumpProy < 100) {
-                    semaforoTxt = '🟠 En Alerta';
-                    badgeColor = 'bg-amber-100 text-amber-800';
-                }
-
-                // Fila Ejecutiva
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition";
-                tr.innerHTML = `
-                    <td class="p-3 font-medium text-slate-700">${uni}</td>
-                    <td class="p-3 text-right text-slate-600">$${meta.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right font-semibold text-slate-800">$${real.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-center"><span class="px-2 py-1 rounded text-xs font-bold ${cump >= 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}">${cump.toFixed(1)}%</span></td>
-                    <td class="p-3 text-right font-medium text-slate-700">$${proyUni.toLocaleString('en-US', {maximumFractionDigits: 0})} (${cumpProy.toFixed(1)}%)</td>
-                    <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${semaforoTxt}</span></td>
-                `;
-                tbody.appendChild(tr);
-
-                // Fila Radar Comercial (Tablas)
-                const trCom = document.createElement('tr');
-                trCom.className = "hover:bg-slate-50 transition";
-                trCom.innerHTML = `
-                    <td class="p-3 font-semibold text-slate-800">${uni}</td>
-                    <td class="p-3 text-right text-slate-600">$${meta.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-right font-bold text-blue-700">$${real.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                    <td class="p-3 text-center font-bold">${cump.toFixed(1)}%</td>
-                    <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${semaforoTxt}</span></td>
-                `;
-                tbodyComercial.appendChild(trCom);
-            });
-
-            actualizarGraficos(nombresUnidades, metasPorUnidad, ventasPorUnidad);
-        }
-
-        function actualizarGraficos(unidades, metas, ventas) {
-            const dataMetas = unidades.map(u => metas[u] || 0);
-            const dataVentas = unidades.map(u => ventas[u] || 0);
-
-            const ctxUni = document.getElementById('graficoUnidades').getContext('2d');
-            if (chartUnidadesInstance) chartUnidadesInstance.destroy();
-
-            chartUnidadesInstance = new Chart(ctxUni, {
-                type: 'bar',
-                data: {
-                    labels: unidades,
-                    datasets: [
-                        { label: 'Meta', data: dataMetas, backgroundColor: '#94a3b8', borderRadius: 4 },
-                        { label: 'Venta Real', data: dataVentas, backgroundColor: '#0b1c3c', borderRadius: 4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-
-            const ctxTend = document.getElementById('graficoTendencia').getContext('2d');
-            if (chartTendenciaInstance) chartTendenciaInstance.destroy();
-
-            chartTendenciaInstance = new Chart(ctxTend, {
-                type: 'line',
-                data: {
-                    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Cierre Proyectado'],
-                    datasets: [{
-                        label: 'Evolución de Venta Neta',
-                        data: [0.25 * ventas, 0.5 * ventas, ventas, 1.3 * ventas],
-                        borderColor: '#0056b3',
-                        backgroundColor: 'rgba(0, 86, 179, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-        }
-
-        window.onload = init;
-    </script>
+    // Iniciar carga automática al abrir la página
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAllData(false);
+    });
+  </script>
 </body>
 </html>
